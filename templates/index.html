@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Planner</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='airplane.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="travel-app">
+        <header>
+            <h1>Travel Planner</h1>
+            <p style="font-size: 1.2rem; color: #86868b; max-width: 600px; margin: 0 auto;">
+                Experience seamless travel planning with our intuitive platform
+            </p>
+        </header>
+        
+        <main>
+            <section class="search-section">
+                <h2>Plan Your Trip</h2>
+                <form id="search-form">
+                    <div class="form-group">
+                        <label for="startPoint">Your Location:</label>
+                        <select id="startPoint" name="startPoint" required>
+                            <option value="">Select your location</option>
+                            <option value="New York">New York</option>
+                            <option value="London">London</option>
+                            <option value="San Francisco">San Francisco</option>
+                            <option value="Tokyo">Tokyo</option>
+                            <option value="Sydney">Sydney</option>
+                            <option value="Paris">Paris</option>
+                            <option value="Dubai">Dubai</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="destination">Destination:</label>
+                        <select id="destination" name="destination" required>
+                            <option value="">Select destination</option>
+                            <option value="New York">New York</option>
+                            <option value="London">London</option>
+                            <option value="San Francisco">San Francisco</option>
+                            <option value="Tokyo">Tokyo</option>
+                            <option value="Sydney">Sydney</option>
+                            <option value="Paris">Paris</option>
+                            <option value="Dubai">Dubai</option>
+                            <option value="Singapore">Singapore</option>
+                            <option value="Mumbai">Mumbai</option>
+                            <option value="Delhi">Delhi</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="budget">Daily Budget (USD):</label>
+                        <div class="input-with-icon">
+                            <input type="number" id="budget" name="budget" placeholder="">
+                            <div class="info-icon" id="budget-info">i</div>
+                            <div class="tooltip" id="budget-tooltip">Minimum Hotel Cost: Loading...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group date-range">
+                        <label for="startDate">From:</label>
+                        <input type="date" id="startDate" name="startDate" min="">
+                    </div>
+                    
+                    <div class="form-group date-range">
+                        <label for="endDate">To: </label>
+                        <input type="date" id="endDate" name="endDate" min="">
+                    </div>
+                    
+                    <button type="submit" class="search-btn">Search</button>
+                </form>
+            </section>
+            
+            <div id="loading" class="loading" style="display: none;">Loading...</div>
+            
+            <div class="results-container">
+                <section class="flights-section">
+                    <h2>Available Flights</h2>
+                    <ul id="flights-list" class="flights-list"></ul>
+                    <p id="no-flights" style="display: none;">No flights found. Try different locations.</p>
+                </section>
+                
+                <section class="hotels-section">
+                    <h2>Hotels Within Budget</h2>
+                    <ul id="hotels-list" class="hotels-list"></ul>
+                    <p id="no-hotels" style="display: none;">No hotels found within your budget. Try increasing your budget.</p>
+                </section>
+            </div>
+            
+            <section class="chatbot-section">
+                <h2>Travel Buddy</h2>
+                <div class="chat-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <div class="message bot">
+                            <p>Hello! I'm your travel buddy, Ramu. Ask me about itineraries, local attractions, or anything else about your trip to your destination!</p>
+                        </div>
+                    </div>
+                    
+                    <form id="chat-form" class="chat-input">
+                        <input type="text" id="userMessage" name="message" placeholder="Ask about itineraries, attractions, etc." disabled>
+                        <button type="submit" disabled>Send</button>
+                    </form>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p style="color: #86868b;">&copy; 2025 Travel Planner. By Tarun Sunil.</p>
+        </footer>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+<!-- Add this before closing </body> tag -->
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
+</body>
+</html>
