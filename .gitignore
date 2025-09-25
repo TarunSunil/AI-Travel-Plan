@@ -1,0 +1,15 @@
+.env
+.env.*
+travel_planner.db
+__pycache__/
+*.py[cod]
+*.sqlite
+*.db
+*.log
+/node_modules/
+/archive/
+/static/backup/
+/static/styles.css.backup
+tempCodeRunnerFile.*
+*.exe
+*.ps1

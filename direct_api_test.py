@@ -1,5 +1,6 @@
 """
-Simple test script for Amadeus API access
+DEPRECATED (2025-09-25): Simple ad-hoc Amadeus API access script kept only for historical reference.
+Will be removed once formal tests exist.
 """
 import os
 import requests

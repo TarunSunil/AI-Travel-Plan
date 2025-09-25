@@ -1,3 +1,4 @@
+<# DEPRECATED SCRATCH SCRIPT (2025-09-25): Retained only as placeholder. #>
 try {
   $c = Invoke-RestMethod -Uri 'http://127.0.0.1:5000/search_cities' -Method Post
   Write-Output '---CITIES---'

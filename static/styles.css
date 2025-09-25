@@ -569,3 +569,90 @@ select:focus {
     background: rgba(255, 255, 255, 0.1);
     cursor: not-allowed;
 }
+
+/* === Added from deprecated static/css/style.css before cleanup === */
+/* Flight route layout */
+.flight-route {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 15px 0;
+    padding: 0 10px;
+}
+
+.departure, .arrival {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.departure { align-items: flex-start; }
+.arrival { align-items: flex-end; }
+
+.flight-arrow {
+    margin: 0 20px;
+    font-size: 18px;
+    color: #ccc;
+    flex-shrink: 0;
+}
+
+.departure .time, .arrival .time {
+    font-weight: 600;
+    font-size: 16px;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.departure .airport, .arrival .airport {
+    font-size: 12px;
+    color: #adb5bd;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Logout button unified styling */
+#logoutBtn {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: #6c757d;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+}
+
+#logoutBtn:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.35);
+}
+
+/* Responsive tweaks for title + logout */
+@media (max-width: 768px) {
+    .title-section h1 { font-size: 2.5rem; }
+    .title-section p { font-size: 1rem; }
+    #logoutBtn {
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .title-section h1 { font-size: 2rem; }
+    #logoutBtn {
+        top: 0.25rem;
+        right: 0.25rem;
+        padding: 0.4rem 0.8rem;
+        font-size: 11px;
+    }
+}
+/* === End merged styles === */

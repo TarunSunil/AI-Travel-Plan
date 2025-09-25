@@ -1,46 +1,5 @@
-.flight-route {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 15px 0;
-    padding: 0 10px;
-}
-
-.departure {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    flex: 1;
-}
-
-.arrival {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    flex: 1;
-}
-
-.flight-arrow {
-    margin: 0 20px;
-    font-size: 18px;
-    color: #666;
-    flex-shrink: 0;
-}
-
-.departure .time,
-.arrival .time {
-    font-weight: bold;
-    font-size: 16px;
-    color: #2c3e50;
-    margin-bottom: 4px;
-}
-
-.departure .airport,
-.arrival .airport {
-    font-size: 12px;
-    color: #7f8c8d;
-    text-transform: uppercase;
-}
+/* DEPRECATED (2025-09-25): This file's styles were merged into /static/styles.css.
+   It is retained only as a placeholder to avoid broken references. */
 
 header {
     position: relative;

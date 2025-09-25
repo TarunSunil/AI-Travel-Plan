@@ -1,5 +1,6 @@
 """
-Test script for Amadeus API functionality
+DEPRECATED (2025-09-25): Legacy Amadeus API functionality test harness.
+To be migrated to structured pytest tests under /tests.
 """
 import os
 from dotenv import load_dotenv

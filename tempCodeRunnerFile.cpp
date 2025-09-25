@@ -1,3 +1,4 @@
+// DEPRECATED SCRATCH FILE (2025-09-25) - content minimized for repo hygiene
 #include <iostream>
 using namespace std;
 
@@ -29,5 +30,5 @@ int main() {
             cout << nextTerm << ", ";
         }
     }
-    return 0;
+    return 0; // placeholder
 }
