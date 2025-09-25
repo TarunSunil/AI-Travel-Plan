@@ -5,15 +5,86 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Planner</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='airplane.png') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    
+    <!-- Firebase CDN Scripts -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        
+        // Firebase config - Use production authDomain with localhost in authorized domains
+        const firebaseConfig = {
+            apiKey: "AIzaSyDTvRaoloxFZNxsEMAW8_RWgfam2ECeT30",
+            authDomain: "ai-tp-a98af.firebaseapp.com", // Use production domain
+            projectId: "ai-tp-a98af",
+            storageBucket: "ai-tp-a98af.appspot.com",
+            messagingSenderId: "578943308642",
+            appId: "1:578943308642:web:4eb27a2aef42a2486d923b"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // Check authentication state
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // User not logged in, redirect to login
+                window.location.href = '/login';
+            } else {
+                console.log('User is authenticated:', user.email);
+                
+                // Attach logout functionality directly
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    // Check if the listener has already been attached to prevent duplicates
+                    if (!logoutBtn.hasAttribute('data-listener-attached')) {
+                        logoutBtn.addEventListener('click', async () => {
+                            try {
+                                await auth.signOut();
+                                // The onAuthStateChanged listener will automatically redirect to /login
+                            } catch (error) {
+                                console.error('Error signing out:', error);
+                            }
+                        });
+                        logoutBtn.setAttribute('data-listener-attached', 'true');
+                    }
+                }
+            }
+        });
+    </script>
+    
+    <!-- Force CSS reload by adding version parameter -->
+    <script>
+        // Force reload CSS on page load
+        window.onload = function() {
+            var links = document.getElementsByTagName('link');
+            for (var i = 0; i < links.length; i++) {
+                if (links[i].rel === 'stylesheet') {
+                    var href = links[i].href;
+                    links[i].href = href + '?v=' + new Date().getTime();
+                }
+            }
+        }
+    </script>
 </head>
 <body>
+    <!-- Logout button moved outside all containers for independent positioning -->
+    <button id="logoutBtn">
+        Logout
+    </button>
+
     <div class="travel-app">
         <header>
-            <h1>Travel Planner</h1>
-            <p style="font-size: 1.2rem; color: #86868b; max-width: 600px; margin: 0 auto;">
-                Experience seamless travel planning with our intuitive platform
-            </p>
+            <div class="header-container">
+                <div class="title-section">
+                    <h1>Travel Planner</h1>
+                    <p style="font-size: 1.2rem; color: #86868b; max-width: 600px; margin: 0 auto;">
+                        Experience seamless travel planning with our intuitive platform
+                    </p>
+                </div>
+                <!-- The button was here -->
+            </div>
         </header>
         
         <main>
@@ -24,16 +95,6 @@
                         <label for="startPoint">Your Location:</label>
                         <select id="startPoint" name="startPoint" required>
                             <option value="">Select your location</option>
-                            <option value="New York">New York</option>
-                            <option value="London">London</option>
-                            <option value="San Francisco">San Francisco</option>
-                            <option value="Tokyo">Tokyo</option>
-                            <option value="Sydney">Sydney</option>
-                            <option value="Paris">Paris</option>
-                            <option value="Dubai">Dubai</option>
-                            <option value="Singapore">Singapore</option>
-                            <option value="Mumbai">Mumbai</option>
-                            <option value="Delhi">Delhi</option>
                         </select>
                     </div>
                     
@@ -41,25 +102,15 @@
                         <label for="destination">Destination:</label>
                         <select id="destination" name="destination" required>
                             <option value="">Select destination</option>
-                            <option value="New York">New York</option>
-                            <option value="London">London</option>
-                            <option value="San Francisco">San Francisco</option>
-                            <option value="Tokyo">Tokyo</option>
-                            <option value="Sydney">Sydney</option>
-                            <option value="Paris">Paris</option>
-                            <option value="Dubai">Dubai</option>
-                            <option value="Singapore">Singapore</option>
-                            <option value="Mumbai">Mumbai</option>
-                            <option value="Delhi">Delhi</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
-                        <label for="budget">Daily Budget (USD):</label>
+                        <label for="budget">Daily Budget (INR):</label>
                         <div class="input-with-icon">
-                            <input type="number" id="budget" name="budget" placeholder="">
+                            <input type="number" id="budget" name="budget" placeholder="Enter your budget" min="0" step="1">
                             <div class="info-icon" id="budget-info">i</div>
-                            <div class="tooltip" id="budget-tooltip">Minimum Hotel Cost: Loading...</div>
+                            <div class="tooltip" id="budget-tooltip">Select origin and destination to see minimum hotel cost</div>
                         </div>
                     </div>
                     
@@ -82,13 +133,13 @@
             <div class="results-container">
                 <section class="flights-section">
                     <h2>Available Flights</h2>
-                    <ul id="flights-list" class="flights-list"></ul>
+                    <div id="flights-list" class="flights-list"></div>
                     <p id="no-flights" style="display: none;">No flights found. Try different locations.</p>
                 </section>
                 
                 <section class="hotels-section">
                     <h2>Hotels Within Budget</h2>
-                    <ul id="hotels-list" class="hotels-list"></ul>
+                    <div id="hotels-list" class="hotels-list"></div>
                     <p id="no-hotels" style="display: none;">No hotels found within your budget. Try increasing your budget.</p>
                 </section>
             </div>

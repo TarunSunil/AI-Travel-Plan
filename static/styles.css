@@ -1,84 +1,33 @@
-/* Global Styles */
+/* Reset Styles */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', sans-serif;
 }
 
-/* Input with icon container */
-.input-with-icon {
-    position: relative;
-    display: flex;
-    align-items: center;
+body, html {
+    height: 100%;
     width: 100%;
 }
 
-.input-with-icon input {
-    width: 100%;
-}
-
-/* Info icon styling */
-.info-icon {
-    position: absolute;
-    right: 10px;
-    width: 18px;
-    height: 18px;
-    background-color: #555;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-style: italic;
-    cursor: pointer;
-    z-index: 2;
-}
-
-/* Tooltip styling */
-.tooltip {
-    position: absolute;
-    top: -45px;
-    right: 0;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s, visibility 0.3s;
-    white-space: nowrap;
-    z-index: 10;
-}
-
-/* Show tooltip on hover */
-.info-icon:hover + .tooltip,
-.tooltip:hover {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* Add a small arrow at the bottom of the tooltip */
-.tooltip::after {
-    content: "";
-    position: absolute;
-    bottom: -5px;
-    right: 10px;
-    border-width: 5px 5px 0;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.8) transparent transparent;
-}
-
+/* Base Styles */
 body {
-    background-color: #000;
-    color: #f5f5f7;
+    background-image: url('images/sample_0.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    background-color: #000; /* Fallback color */
     line-height: 1.6;
 }
 
 .travel-app {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
 }
@@ -86,114 +35,49 @@ body {
 /* Header Styles */
 header {
     text-align: center;
-    padding: 6rem 0;
-    background: linear-gradient(135deg, rgba(249, 77, 0, 0.15) 0%, rgba(249, 77, 0, 0.05) 100%);
-    border-radius: 24px;
+    padding: 4rem 0;
     margin-bottom: 3rem;
     position: relative;
-    overflow: hidden;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(249, 77, 0, 0.1);
-}
-
-/* Search Section Styles */
-.search-section {
-    background: linear-gradient(135deg, rgba(249, 77, 0, 0.1) 0%, rgba(249, 77, 0, 0.02) 100%);
-    padding: 6rem 3rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(249, 77, 0, 0.1);
-}
-
-/* Results Container Styles */
-.flights-section,
-.hotels-section {
-    background: linear-gradient(135deg, rgba(249, 77, 0, 0.08) 0%, rgba(249, 77, 0, 0.02) 100%);
-    padding: 6rem 2.5rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(249, 77, 0, 0.1);
-}
-
-/* Chatbot Section Styles */
-.chatbot-section {
-    background: linear-gradient(135deg, rgba(249, 77, 0, 0.1) 0%, rgba(249, 77, 0, 0.02) 100%);
-    padding: 6rem 3rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(249, 77, 0, 0.1);
-}
-
-/* Update the search button to match theme */
-.search-btn {
-    background: #f94d00;
-    color: white;
-}
-
-.search-btn:hover {
-    background: #e64600;
-}
-
-/* Update chat input button to match theme */
-.chat-input button {
-    background: #f94d00;
-}
-
-.chat-input button:hover {
-    background: #e64600;
-}
-
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-    pointer-events: none;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 header h1 {
-    font-size: 4.5rem;
+    font-size: 3.5rem;
     font-weight: 700;
-    letter-spacing: -0.5px;
     margin-bottom: 1rem;
     background: linear-gradient(90deg, #fff 0%, #f5f5f7 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Main Content Styles */
-main {
-    display: grid;
-    gap: 2.5rem;
+header p {
+    font-size: 1.2rem;
+    color: #86868b;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-/* Search Section Styles */
+/* Form Styles */
 .search-section {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 3rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2.5rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.search-section:hover {
-    transform: translateY(-4px);
-    background: rgba(255, 255, 255, 0.08);
+    margin-bottom: 2.5rem;
 }
 
 .search-section h2 {
-    color: #f5f5f7;
-    margin-bottom: 2.5rem;
-    font-size: 2.2rem;
+    color: #ffffff;
+    font-size: 2rem;
+    margin-bottom: 2rem;
     font-weight: 600;
 }
 
@@ -203,2047 +87,485 @@ main {
 
 label {
     display: block;
-    margin-bottom: 1rem;
-    color: #86868b;
+    color: #f5f5f7;
+    margin-bottom: 0.75rem;
     font-weight: 500;
     font-size: 1rem;
-    letter-spacing: 0.02em;
 }
 
-input, select {
+/* Input Styles */
+input[type="number"],
+input[type="date"],
+select {
     width: 100%;
-    padding: 0.8rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 14px 36px 14px 16px; /* Increased right padding to accommodate the info icon */
+    font-size: 1rem;
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
-    font-size: 0.95rem;
     transition: all 0.3s ease;
-    background: rgba(255, 255, 255, 0.05);
-    color: #f5f5f7;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    height: 42px;
+    -moz-appearance: textfield; /* Remove spinner arrows in Firefox */
 }
 
-input:focus, select:focus {
+/* Remove spinner arrows in Chrome/Safari/Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+select option {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    padding: 10px;
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+input:focus,
+select:focus {
     outline: none;
     border-color: #2997ff;
     background: rgba(255, 255, 255, 0.1);
 }
 
-select {
-    cursor: pointer;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5f5f7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1.2em;
-}
-
+/* Button Styles */
 .search-btn {
-    background: #da845c;
-    color: #fff;
-    padding: 0.8rem 2.5rem;
+    background: linear-gradient(135deg, #db7f5c 0%, #dc5212 100%);
+    color: white;
+    padding: 14px 28px;
     border: none;
     border-radius: 12px;
-    cursor: pointer;
     font-size: 1.1rem;
     font-weight: 600;
+    cursor: pointer;
     transition: all 0.3s ease;
-    width: auto;
-    margin: 2rem auto 0;
     display: block;
-    line-height: 1;
+    margin: 2rem auto 0;
+    min-width: 200px;
 }
 
 .search-btn:hover {
-    background: #c76437;
+    background: linear-gradient(135deg, #dc5212 0%, #db7f5c 100%);
     transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(219, 127, 91, 0.3);
 }
 
-/* Results Container Styles */
+/* Results Container */
 .results-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.flights-list,
+.hotels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
 }
 
 .flights-section,
 .hotels-section {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 2.5rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.flights-section h2,
-.hotels-section h2 {
-    color: #f5f5f7;
-    margin-bottom: 2rem;
-    font-size: 1.8rem;
+.flight-item,
+.hotel-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.3s ease;
+}
+
+.flight-item:hover,
+.hotel-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Flight item specific styles */
+.flight-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.airline {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.flight-number {
+    color: #86868b;
+    font-size: 0.9rem;
+}
+
+.flight-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.route {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.departure,
+.arrival {
+    text-align: center;
+}
+
+.time {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #ffffff;
+}
+
+.city {
+    font-size: 0.9rem;
+    color: #86868b;
+    margin-top: 0.25rem;
+}
+
+.flight-arrow {
+    color: #86868b;
+    font-size: 1.2rem;
+}
+
+.price {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #db7f5c;
+}
+
+/* Hotel item specific styles */
+.hotel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hotel-name {
+    font-size: 1.3rem;
+    margin: 0;
+    color: #ffffff;
     font-weight: 600;
 }
 
-.flights-list li,
-.hotels-list li {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 1.8rem;
-    border-radius: 16px;
-    margin-bottom: 1.2rem;
+.hotel-rating {
+    color: #ffd700;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+}
+
+.hotel-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.hotel-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #86868b;
+    font-size: 1rem;
+}
+
+.hotel-description {
+    color: #f5f5f7;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    padding: 0.5rem 0;
+}
+
+.hotel-amenities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.amenity-tag {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f5f5f7;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hotel-price {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hotel-price .label {
+    color: #86868b;
+    font-size: 1rem;
+}
+
+.hotel-price .amount {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #db7f5c;
+    background: linear-gradient(135deg, #db7f5c 0%, #dc5212 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Results header */
+.results-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Loading & Error States */
+.loading {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+    color: #f5f5f7;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: none;
+}
+
+.error {
+    color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+/* Info Icon and Tooltip */
+.input-with-icon {
+    position: relative;
+    width: 100%;
+}
+
+.info-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 12px;
+    cursor: pointer;
     transition: all 0.3s ease;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 2;
 }
 
-.flights-list li:hover,
-.hotels-list li:hover {
-    background: rgba(255, 255, 255, 0.08);
-    transform: translateX(4px);
+.tooltip {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.9);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 100;
+    white-space: nowrap;
 }
 
-/* Chatbot Section Styles */
+.info-icon:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.info-icon:hover + .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-5px);
+}
+
+/* Date Range Styles */
+.date-range {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+.date-range .form-group {
+    flex: 1;
+    margin-bottom: 0;
+    max-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-range label {
+    margin-bottom: 0;
+    min-width: 50px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .travel-app {
+        padding: 1rem;
+    }
+    
+    header {
+        padding: 3rem 1rem;
+    }
+    
+    header h1 {
+        font-size: 2.5rem;
+    }
+    
+    .search-section {
+        padding: 1.5rem;
+    }
+    
+    .results-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-btn {
+        width: 100%;
+    }
+    
+    .date-range {
+        flex-direction: column;
+    }
+    
+    .date-range .form-group {
+        max-width: 100%;
+    }
+}
+
+/* Chatbot Section */
 .chatbot-section {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 3rem;
-    border-radius: 24px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.chat-container {
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.6);
+    padding: 2rem;
     border-radius: 16px;
-    overflow: hidden;
-    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: 2.5rem;
 }
 
 .chat-messages {
-    height: 500px;
+    height: 400px;
     overflow-y: auto;
-    padding: 1.5rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    margin-bottom: 1rem;
 }
 
 .message {
-    margin-bottom: 1.2rem;
-    padding: 1.2rem 1.5rem;
-    border-radius: 16px;
-    max-width: 85%;
-    line-height: 1.6;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    max-width: 80%;
 }
 
 .message.bot {
-    background: rgba(41, 151, 255, 0.1);
-    color: #f5f5f7;
+    background: rgba(255, 255, 255, 0.1);
     margin-right: auto;
-    border-bottom-left-radius: 4px;
-    border: 1px solid rgba(41, 151, 255, 0.2);
 }
 
 .message.user {
-    background: #2997ff;
-    color: white;
+    background: rgba(219, 127, 91, 0.2);
     margin-left: auto;
-    border-bottom-right-radius: 4px;
 }
 
 .chat-input {
     display: flex;
-    padding: 1.2rem;
-    background: rgba(0, 0, 0, 0.5);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 1rem;
 }
 
 .chat-input input {
     flex: 1;
-    margin-right: 1rem;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 14px 16px;
+    color: #ffffff;
 }
 
 .chat-input button {
-    background: #da845c;
+    background: linear-gradient(135deg, #db7f5c 0%, #dc5212 100%);
     color: white;
-    padding: 1rem 2rem;
+    padding: 14px 28px;
     border: none;
     border-radius: 12px;
-    cursor: pointer;
     font-weight: 600;
-    transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .chat-input button:hover {
-    background: #dc5212;
+    background: linear-gradient(135deg, #dc5212 0%, #db7f5c 100%);
 }
 
 .chat-input button:disabled {
     background: rgba(255, 255, 255, 0.1);
     cursor: not-allowed;
 }
-
-/* Min Price Display Styles */
-.min-price-display {
-    margin: 1.5rem 0; /* Changed margin to place it between budget and date section */
-    padding: 0.8rem 1rem;
-    background: rgba(255, 255, 255, 0.08); /* Made background more translucent */
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    font-size: 0.9rem;
-    color: #da845c;
-    max-width: 400px;
-    display: none; /* Will be toggled by JavaScript */
-    backdrop-filter: blur(5px); /* Added for translucent effect */
-    -webkit-backdrop-filter: blur(5px);
-}
-
-.min-price-display p {
-    margin: 0.4rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    color: #da845c;
-    font-weight: 500;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;
-    width: 180px;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* Style the calendar popup */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;  /* Added to match website background */
-}
-
-/* For Firefox */
-input[type="date"]::-moz-calendar-picker-indicator {
-    filter: invert(1);
-    opacity: 0.6;
-    cursor: pointer;
-    background-color: #1a1a1a;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .date-range .form-group {
-        max-width: 100%;
-        width: 100%;
-    }
-}
-
-/* Specific styles for location and destination dropdowns */
-#startPoint, #destination {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint option, #destination option {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-}
-
-#startPoint:focus, #destination:focus {
-    background-color: #1a1a1a;
-    color: #f5f5f7;
-    border-color: #2997ff;
-}
-body {
-    background-image: url('../static/images/sample_0.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
-    color: #ffffff;
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 20px;
-    min-height: 100vh;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.search-section, .results-section {
-    background-color: rgba(0, 0, 0, 0.7);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    backdrop-filter: blur(5px);
-}
-
-.results-container {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.flight-item, .hotel-item {
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    backdrop-filter: blur(3px);
-}
-
-h1, h2 {
-    color: #ffffff;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.search-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-input, select, button {
-    padding: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-button {
-    background-color: rgba(219, 127, 91, 0.8);
-    color: white;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: rgba(219, 127, 91, 1);
-}
-
-.loading {
-    text-align: center;
-    display: none;
-}
-
-.error {
-    color: #ff6b6b;
-    background-color: rgba(255, 107, 107, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    margin-top: 10px;
-}
-
-.min-price-display p:first-child {
-    color: #da845c;
-    font-weight: 500;
-    border-bottom: 1px solid rgba(218, 132, 92, 0.2);
-    padding-bottom: 0.4rem;
-}
-
-.min-price-display p:last-child {
-    color: #da845c;
-    font-weight: 500;
-    margin-bottom: 0;
-}
-
-/* Remove the third paragraph (Estimated Total) in JavaScript */
-
-/* Loading Styles */
-.loading {
-    text-align: center;
-    padding: 2rem;
-    font-size: 1.1rem;
-    color: #86868b;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-}
-
-/* Scrollbar Styles */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Date Range Styles */
-.date-range {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;  /* Changed from flex-end to center */
-}
-
-.date-range .form-group {
-    flex: 1;
-    margin-bottom: 0;
-    max-width: 180px;
-    display: flex;  /* Added */
-    align-items: center;  /* Added */
-    gap: 1rem;  /* Added */
-}
-
-.date-range label {
-    margin-bottom: 0;  /* Changed from 1rem to 0 */
-    min-width: 50px;  /* Added */
-}
-
-input[type="date"] {
-    color: #f5f5f7;

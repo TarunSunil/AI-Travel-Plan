@@ -1,0 +1,154 @@
+# TRAVEL PLANNER - API INTEGRATION FIX
+
+Date: September 18, 2025
+Issue: Error fetching flight and hotel results ("Error fetching results. Please try again.")
+Status: RESOLVED
+
+## PROBLEM ANALYSIS
+
+When searching for flights and hotels, the application displayed error messages on both the flight and hotel results sections. The errors appeared in the UI as:
+
+```
+Error fetching results. Please try again.
+```
+
+The issue was not immediately visible in the frontend logs, suggesting it was a backend API integration problem.
+
+## ROOT CAUSE
+
+Upon investigation, I found that the `search_flights` function in `amadeus_api.py` was attempting to use an undefined `amadeus` object, likely from a Python SDK that was never imported or initialized:
+
+```python
+def search_flights(origin, destination, departure_date, adults=1, currency='USD'):
+    try:
+        response = amadeus.shopping.flight_offers_search.get(  # <-- amadeus object undefined
+            originLocationCode=origin,
+            destinationLocationCode=destination,
+            ...
+```
+
+Additionally, the hotel search API was using incorrect parameters for the Amadeus API v3 endpoint, which requires either `hotelIds` or a different endpoint for city-based searches.
+
+## SOLUTION IMPLEMENTED
+
+1. **FIXED FLIGHT SEARCH API INTEGRATION**:
+   - Replaced the undefined `amadeus` object with a direct REST API call using the `requests` library
+   - Added proper authentication token retrieval
+   - Improved error handling and logging
+   - Fixed data structure mapping from the API response
+
+2. **FIXED HOTEL SEARCH API INTEGRATION**:
+   - Implemented the correct two-step process for Amadeus API v3:
+     1. First get hotel IDs for a city using `/v1/reference-data/locations/hotels/by-city`
+     2. Then get hotel offers using these IDs with `/v3/shopping/hotel-offers`
+   - Added better error handling and logging
+
+3. **IMPROVED ERROR HANDLING**:
+   - Added detailed logging for API responses
+   - Provided meaningful error messages
+   - Added response validation
+
+4. **ADDED API DEBUGGING CAPABILITIES**:
+   - Created a separate test script (`direct_api_test.py`) for isolated API testing
+   - Added debug output for API requests and responses
+   - Implemented validation of API credentials and access tokens
+
+## TECHNICAL DETAILS
+
+### Flight Search API Fix
+```python
+def search_flights(origin, destination, departure_date, return_date=None, adults=1, travel_class='ECONOMY', currency='USD'):
+    """Search flights using Amadeus API"""
+    try:
+        # Get Amadeus API access token
+        token = get_access_token()
+        if not token:
+            raise Exception("Failed to get Amadeus API access token")
+        
+        url = f"{AMADEUS_BASE_URL}/v2/shopping/flight-offers"
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        params = {
+            'originLocationCode': origin,
+            'destinationLocationCode': destination,
+            'departureDate': departure_date,
+            'adults': adults,
+            'currencyCode': currency,
+            'max': 15
+        }
+        
+        # Add optional parameters if provided
+        if return_date:
+            params['returnDate'] = return_date
+        if travel_class:
+            params['travelClass'] = travel_class
+            
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Process response and return formatted flight data
+        ...
+```
+
+### Hotel Search API Fix
+```python
+def search_hotels(city_name, check_in, check_out, adults=1):
+    """Search for hotels using Amadeus API"""
+    try:
+        token = get_access_token()
+        if token:
+            city_code = get_city_code(city_name, token)
+            if city_code:
+                # Step 1: Get hotel IDs for the city
+                hotel_list_url = f"{AMADEUS_BASE_URL}/v1/reference-data/locations/hotels/by-city"
+                params = {
+                    'cityCode': city_code,
+                    'radius': 50,
+                    'radiusUnit': 'KM',
+                    'hotelSource': 'ALL'
+                }
+                
+                hotel_response = requests.get(hotel_list_url, headers={'Authorization': f'Bearer {token}'}, params=params)
+                
+                if hotel_response.status_code == 200:
+                    hotel_data = hotel_response.json()
+                    if 'data' in hotel_data and hotel_data['data']:
+                        # Get hotel IDs
+                        hotel_ids = [hotel.get('hotelId') for hotel in hotel_data['data'][:5]]
+                        
+                        # Step 2: Get offers for these hotels
+                        offers_url = f"{AMADEUS_BASE_URL}/v3/shopping/hotel-offers"
+                        params = {
+                            'hotelIds': ','.join(hotel_ids),
+                            'checkInDate': check_in,
+                            'checkOutDate': check_out,
+                            'adults': adults
+                        }
+                        
+                        # Process response and return formatted hotel data
+                        ...
+```
+
+## IMPACT
+
+- Users can now successfully search for flights and hotels
+- Flight search correctly displays available flights with times and prices
+- Hotel search correctly shows accommodations within the selected destination
+- API integration is more robust with better error handling
+- Debug logging provides better visibility for future troubleshooting
+
+## TESTING VALIDATION
+
+- Verified API credentials and access token retrieval
+- Successfully tested direct API calls to flight and hotel endpoints
+- Confirmed proper data mapping from API responses to frontend format
+- Validated error handling for edge cases
+
+## NEXT STEPS
+
+1. Consider implementing an API client library for better maintainability
+2. Add caching for frequently searched routes to reduce API calls
+3. Implement rate limiting awareness to prevent API quota issues
+4. Enhance error messages shown to users with more specific guidance
+5. Consider implementing a monitoring system for API health

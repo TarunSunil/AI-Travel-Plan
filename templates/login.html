@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Travel Planner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase CDN Scripts -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Make Firebase available globally
+        window.firebaseApp = initializeApp;
+        window.firebaseAuth = getAuth;
+        window.firebaseFirestore = getFirestore;
+        
+        // Firebase config - Use production authDomain with localhost in authorized domains
+        window.firebaseConfig = {
+            apiKey: "AIzaSyDTvRaoloxFZNxsEMAW8_RWgfam2ECeT30",
+            authDomain: "ai-tp-a98af.firebaseapp.com", // Use production domain
+            projectId: "ai-tp-a98af",
+            storageBucket: "ai-tp-a98af.appspot.com",
+            messagingSenderId: "578943308642",
+            appId: "1:578943308642:web:4eb27a2aef42a2486d923b"
+        };
+    </script>
+</head>
+<body>
+    <div class="animated-bg">
+        <div class="floating-plane"></div>
+        <div class="clouds"></div>
+    </div>
+    
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <i class="fas fa-plane"></i>
+                </div>
+                <h1>AI Travel Planner</h1>
+                <p>Plan your perfect journey</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <div class="input-container">
+                        <input type="email" id="email" name="email" required>
+                        <label for="email">Email Address</label>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="input-container">
+                        <input type="password" id="password" name="password" required>
+                        <label for="password">Password</label>
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="toggle-password" onclick="togglePassword('password')">>>
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <span>Sign In</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>Or continue with</span>
+            </div>
+
+            <!-- Social Login -->
+            <div class="social-login">
+                <button type="button" class="social-btn google-btn" onclick="signInWithGoogle()">
+                    <i class="fab fa-google"></i>
+                    <span>Google</span>
+                </button>
+                <button type="button" class="social-btn github-btn" onclick="signInWithGithub()">
+                    <i class="fab fa-github"></i>
+                    <span>GitHub</span>
+                </button>
+            </div>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>
