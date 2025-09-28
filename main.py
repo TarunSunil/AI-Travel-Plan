@@ -450,5 +450,11 @@ Please provide a detailed, helpful response that addresses their question thorou
         print(f"General Error: {str(e)}")
         return jsonify({"response": "Sorry, I encountered an unexpected error. Please try again."})
 
+import os, sys
+REQUIRED_ENV = ["AMADEUS_CLIENT_ID","AMADEUS_CLIENT_SECRET","GEMINI_API_KEY","SECRET_KEY"]
+missing = [k for k in REQUIRED_ENV if not os.getenv(k)]
+if missing:
+    print(f"[BOOT][ERROR] Missing: {', '.join(missing)}", file=sys.stderr)
+
 if __name__ == '__main__':
     app.run(debug=True)
