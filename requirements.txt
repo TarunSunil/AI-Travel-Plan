@@ -1,6 +1,11 @@
 Flask==3.0.0
 python-dotenv==1.0.0
 requests==2.31.0
-Amadeus==8.0.0
-Google-GenerativeAI==0.3.2
-Waitress==2.1.2
+google-generativeai==0.3.2
+waitress==2.1.2
+Flask-Limiter==3.5.0
+pytest==8.0.0
+pytest-flask==1.3.0
+psycopg2-binary==2.9.9
+
+

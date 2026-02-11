@@ -2,6 +2,20 @@
 Pre-defined city data that works with Amadeus test API
 """
 
+# Estimated minimum hotel prices per night (in INR) for fallback
+ESTIMATED_HOTEL_PRICES = {
+    "new york": 8000,
+    "london": 7000,
+    "paris": 6500,
+    "tokyo": 5500,
+    "sydney": 7500,
+    "dubai": 6000,
+    "singapore": 5000,
+    "mumbai": 3000,
+    "delhi": 2500,
+    "san francisco": 9000
+}
+
 AVAILABLE_CITIES = {
     "New York": {
         "city_code": "NYC",

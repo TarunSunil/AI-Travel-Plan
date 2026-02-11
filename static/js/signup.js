@@ -4,12 +4,37 @@ import {
     updateProfile,
     GoogleAuthProvider, 
     GithubAuthProvider, 
-    signInWithPopup 
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
+
+// Add scopes for better user info
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+githubProvider.addScope('user:email');
+
+// Check for redirect result on page load
+getRedirectResult(auth)
+    .then(async (result) => {
+        if (result && result.user) {
+            console.log('Redirect sign-in successful:', result.user.email);
+            await saveUserToFirestore(result.user);
+            localStorage.setItem('userToken', await result.user.getIdToken());
+            localStorage.setItem('userId', result.user.uid);
+            window.location.href = '/';
+        }
+    })
+    .catch((error) => {
+        console.error('Redirect result error:', error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showError(getErrorMessage(error.code));
+        }
+    });
 
 const signupForm = document.getElementById('signupForm');
 const errorMessage = document.getElementById('errorMessage');
@@ -87,28 +112,47 @@ signupForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Google and GitHub sign-in functions (same as login.js)
+// Google and GitHub sign-in functions with fallback to redirect
 window.signInWithGoogle = async () => {
     try {
-        console.log('Attempting Google sign-in...'); // Debug log
+        console.log('Attempting Google sign-in...');
         showLoading(true);
-        const result = await signInWithPopup(auth, googleProvider);
-        const user = result.user;
         
-        console.log('Google sign-in successful:', user.email); // Debug log
-        
-        await saveUserToFirestore(user);
-        
-        localStorage.setItem('userToken', await user.getIdToken());
-        localStorage.setItem('userId', user.uid);
-        
-        window.location.href = '/';
+        // Try popup first
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+            
+            console.log('Google sign-in successful:', user.email);
+            
+            await saveUserToFirestore(user);
+            
+            localStorage.setItem('userToken', await user.getIdToken());
+            localStorage.setItem('userId', user.uid);
+            
+            window.location.href = '/';
+        } catch (popupError) {
+            // If popup fails or is blocked, try redirect
+            if (popupError.code === 'auth/popup-blocked' || 
+                popupError.code === 'auth/popup-closed-by-user' ||
+                popupError.code === 'auth/cancelled-popup-request') {
+                console.log('Popup failed, trying redirect method...');
+                await signInWithRedirect(auth, googleProvider);
+                // Redirect will handle the rest
+                return;
+            }
+            throw popupError;
+        }
         
     } catch (error) {
-        console.error('Google sign-in error:', error); // Detailed error log
+        console.error('Google sign-in error:', error);
         console.error('Error code:', error.code);
         console.error('Error message:', error.message);
-        showError(getErrorMessage(error.code));
+        
+        // Don't show error for popup-closed-by-user (user intentionally closed it)
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showError(getErrorMessage(error.code));
+        }
     } finally {
         showLoading(false);
     }
@@ -116,25 +160,44 @@ window.signInWithGoogle = async () => {
 
 window.signInWithGithub = async () => {
     try {
-        console.log('Attempting GitHub sign-in...'); // Debug log
+        console.log('Attempting GitHub sign-in...');
         showLoading(true);
-        const result = await signInWithPopup(auth, githubProvider);
-        const user = result.user;
         
-        console.log('GitHub sign-in successful:', user.email); // Debug log
-        
-        await saveUserToFirestore(user);
-        
-        localStorage.setItem('userToken', await user.getIdToken());
-        localStorage.setItem('userId', user.uid);
-        
-        window.location.href = '/';
+        // Try popup first
+        try {
+            const result = await signInWithPopup(auth, githubProvider);
+            const user = result.user;
+            
+            console.log('GitHub sign-in successful:', user.email);
+            
+            await saveUserToFirestore(user);
+            
+            localStorage.setItem('userToken', await user.getIdToken());
+            localStorage.setItem('userId', user.uid);
+            
+            window.location.href = '/';
+        } catch (popupError) {
+            // If popup fails or is blocked, try redirect
+            if (popupError.code === 'auth/popup-blocked' || 
+                popupError.code === 'auth/popup-closed-by-user' ||
+                popupError.code === 'auth/cancelled-popup-request') {
+                console.log('Popup failed, trying redirect method...');
+                await signInWithRedirect(auth, githubProvider);
+                // Redirect will handle the rest
+                return;
+            }
+            throw popupError;
+        }
         
     } catch (error) {
-        console.error('GitHub sign-in error:', error); // Detailed error log  
+        console.error('GitHub sign-in error:', error);
         console.error('Error code:', error.code);
         console.error('Error message:', error.message);
-        showError(getErrorMessage(error.code));
+        
+        // Don't show error for popup-closed-by-user (user intentionally closed it)
+        if (error.code !== 'auth/popup-closed-by-user') {
+            showError(getErrorMessage(error.code));
+        }
     } finally {
         showLoading(false);
     }

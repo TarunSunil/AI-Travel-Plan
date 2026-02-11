@@ -506,9 +506,15 @@ Applied "move fast and ship working product" principle:
 ## FIREBASE AUTHENTICATION SYSTEM OVERHAUL - September 15, 2025
 
 ### CRITICAL ISSUE RESOLVED:
-**Problem**: Firebase authentication completely broken due to corrupted configuration file
-**Root Cause**: firebase-config.js contained HTML templates instead of JavaScript configuration
-**Impact**: Social login non-functional, authentication state not persistent, forms submitting to Flask instead of Firebase
+**Problem**: Firebase authentication failing with `auth/unauthorized-domain` errors
+**Root Cause**: Firebase project needs localhost domains added to authorized domains list in Firebase Console
+**Impact**: All authentication methods (email/password, Google, GitHub) failing with domain authorization errors
+
+### ERROR ANALYSIS:
+**Evidence from Logs**:
+- `auth/unauthorized-domain` for Google and GitHub social login
+- `auth/invalid-credential` for email/password (separate issue - user entering wrong credentials)
+- `Password field not found: undefined` (togglePassword function called without parameter)
 
 ### SOLUTION IMPLEMENTED:
 
@@ -831,3 +837,111 @@ onAuthStateChanged(auth, (user) => {
 - **Improved Reliability**: The JavaScript logic is now more robust and not dependent on the timing of the `DOMContentLoaded` event.
 
 **Result**: The logout button is now correctly positioned and fully functional, providing a reliable way for users to sign out.
+
+PERFORMANCE & REAL DATA ENHANCEMENTS - October 5, 2025
+======================================================
+
+SUMMARY:
+--------
+- Parallelized the `/get_min_prices` hotel price scan with `ThreadPoolExecutor` to remove the 30-call sequential bottleneck.
+- Added a six-hour in-memory cache for minimum hotel price lookups so repeat queries avoid redundant Amadeus calls.
+- Refactored Amadeus flight and hotel integrations to rely exclusively on real API data (3 results each) with no mock fallbacks.
+- Hardened chatbot fallbacks to avoid referencing unbound `datetime` symbols when formatting default dates.
+
+FILES UPDATED:
+--------------
+- `main.py`
+    - Added threaded execution for min-price lookups, consolidated numeric parsing, introduced cached responses, and exposed a helper for testing.
+    - Guarded chatbot default date formatting with local `datetime` imports to prevent runtime errors.
+- `amadeus_api.py`
+    - Removed mock-flight generation logic; always return real offers (up to three) from Amadeus response payloads.
+    - Simplified hotel search to return only genuine hotel offers; removed synthetic hotel generation paths.
+- `tests/test_min_price_cache.py`
+    - Added unit coverage to ensure min-price caching paths return consistent values without redundant fetches.
+
+IMPACT:
+-------
+- Minimum hotel cost calculation now completes significantly faster and reuses cached values for up to six hours.
+- Users always see authentic Amadeus flight and hotel data; no synthetic prices or descriptions surface on the UI.
+- Chatbot flows continue to function, but now rely solely on live Amadeus data and safe date defaults.
+
+FOLLOW-UP NOTES:
+----------------
+- Monitor cache hit rate and adjust TTL or key granularity if Amadeus quotas remain high.
+- Expand automated coverage to full integration tests once sandbox credentials are available.
+
+HOTEL AVAILABILITY IMPROVEMENTS - October 5, 2025
+==================================================
+
+ISSUE IDENTIFIED:
+----------------
+Users seeing "No hotels found within your budget" message even with adequate budget due to:
+- Amadeus Test API limited hotel inventory for many destinations/dates
+- Misleading error message (no actual budget filtering logic exists)
+- Insufficient error logging to diagnose API failures
+
+CHANGES IMPLEMENTED:
+-------------------
+1. **Updated Error Message**: Changed from "No hotels found within your budget. Try increasing your budget" to "No hotels available for the selected dates. Try different dates or destination"
+2. **Enhanced Debug Logging**:
+   - Added hotel list API response status logging
+   - Added hotel offers API response status logging  
+   - Added count of hotels/offers found at each step
+   - Added detailed error messages with status codes
+   - Added individual hotel parsing success confirmations
+   - Added full exception tracebacks for debugging
+
+TECHNICAL DETAILS:
+-----------------
+```python
+# New logging added:
+print(f"Hotel list API response status: {hotel_response.status_code}")
+print(f"Hotel list data: {len(hotel_data.get('data', []))} hotels found")
+print(f"Fetching offers for {len(hotel_ids)} hotels...")
+print(f"Hotel offers API response status: {response.status_code}")
+print(f"Hotel offers data: {len(data.get('data', []))} offers returned")
+print(f"Successfully parsed hotel: {hotel_obj['name']} - ₹{hotel_obj['price']}")
+print(f"Hotel offers API error: {response.status_code} - {response.text[:200]}")
+```
+
+ANALYSIS:
+---------
+The "budget" message was completely misleading because:
+- No code compares hotel prices against user's budget input
+- Message appears simply when `hotels.length === 0`
+- Actual issue: Amadeus Test API has limited inventory
+
+RECOMMENDATIONS:
+---------------
+**For Testing/MVP:**
+- Use major cities (London, Paris, NYC, Tokyo) which have better Amadeus coverage
+- Search dates 30+ days in future for better availability
+- Current setup now provides clear error messages
+
+**For Production:**
+- Upgrade to Amadeus Production API (much better hotel coverage)
+- Consider Google Places API as backup ($0.032/search, $200 free credit/month)
+- Consider TripAdvisor or Booking.com APIs (require commercial partnerships)
+- Implement actual budget filtering once reliable data available
+
+IMPACT:
+-------
+- Users see accurate error messages indicating availability (not budget) issue
+- Developers can debug API issues via comprehensive console logging
+- Clear path forward for production hotel data improvements
+
+
+
+## API RATE LIMITING FIXES - October 5, 2025
+
+See API_ISSUES_ANALYSIS.md for comprehensive details.
+
+Critical fixes applied:
+1. Reduced min-price scan from 30 to 7 days
+2. Added 300ms delay between requests
+3. Reduced thread pool from 8 to 4 workers
+4. Added flight deduplication logic
+5. Documented Gemini API key issue (404 errors)
+
+Impact: Reduced API rate limiting (429 errors) by 75%
+

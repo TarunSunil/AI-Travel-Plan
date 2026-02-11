@@ -80,7 +80,7 @@ body {
     z-index: 10;
     position: relative;
     width: 100%;
-    max-width: 450px;
+    max-width: 600px;
     padding: 20px;
 }
 
@@ -88,7 +88,7 @@ body {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     border-radius: 20px;
-    padding: 40px;
+    padding: 25px 40px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
     animation: fadeInUp 0.8s ease-out;
@@ -108,18 +108,18 @@ body {
 /* Logo Section */
 .logo-section {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 25px;
 }
 
 .logo-icon {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
     background: linear-gradient(135deg, #667eea, #764ba2);
     border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 20px;
+    margin: 0 auto 15px;
     box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
     animation: pulse 2s ease-in-out infinite;
 }
@@ -150,11 +150,11 @@ body {
 
 /* Form Styles */
 .login-form {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .form-group {
-    margin-bottom: 25px;
+    margin-bottom: 18px;
 }
 
 .input-container {
@@ -361,7 +361,7 @@ body {
 /* Divider */
 .divider {
     text-align: center;
-    margin: 30px 0;
+    margin: 20px 0;
     position: relative;
 }
 
@@ -376,19 +376,51 @@ body {
 }
 
 .divider span {
-    background: rgba(255, 255, 255, 0.95);
+    background: transparent;
     padding: 0 20px;
-    color: #999;
-    font-size: 14px;
+    color: rgba(102, 126, 234, 0.5);
+    font-size: 11px;
     position: relative;
     z-index: 1;
+}
+
+/* Terms Agreement */
+.terms-agreement {
+    margin-bottom: 20px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 10px;
+    color: #666;
+    line-height: 1.3;
+}
+
+.checkbox-container input[type="checkbox"] {
+    display: none;
+}
+
+.terms-link,
+.privacy-link {
+    color: #667eea;
+    text-decoration: none;
+    font-size: 10px;
+    transition: color 0.3s ease;
+}
+
+.terms-link:hover,
+.privacy-link:hover {
+    color: #5a6fd8;
+    text-decoration: underline;
 }
 
 /* Social Login */
 .social-login {
     display: flex;
     gap: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 }
 
 .social-btn {

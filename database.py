@@ -90,38 +90,6 @@ def init_db():
     finally:
         if conn:
             conn.close()
-
-    # Create tables
-    cursor.execute('''
-        CREATE TABLE flights (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            origin TEXT NOT NULL,
-            destination TEXT NOT NULL,
-            price REAL NOT NULL,
-            date DATE NOT NULL,
-            airline TEXT NOT NULL
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE hotels (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            location TEXT NOT NULL,
-            price_per_night REAL NOT NULL,
-            rating REAL NOT NULL
-        )
-    ''')
-
-    cursor.execute('''
-        CREATE TABLE min_prices (
-            origin TEXT NOT NULL,
-            destination TEXT NOT NULL,
-            min_flight_price REAL NOT NULL,
-            min_hotel_price REAL NOT NULL,
-            PRIMARY KEY (origin, destination)
-        )
-    ''')
     
     cursor.execute('''
         CREATE TABLE api_cache (

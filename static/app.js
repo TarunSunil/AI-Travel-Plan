@@ -1,3 +1,21 @@
+// Development mode - set to false in production to disable debug logging
+const DEV_MODE = false;
+
+// Utility function to escape HTML and prevent XSS attacks
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Debug logging wrapper - only logs in development mode
+function debugLog(...args) {
+    if (DEV_MODE) {
+        console.log(...args);
+    }
+}
+
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
@@ -28,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const budgetTooltip = document.getElementById('budget-tooltip');
     if (!budgetTooltip) console.error('budget-tooltip not found');
     
-    console.log('DOM elements initialized');
+    debugLog('DOM elements initialized');
     
     // Create a div to display minimum prices
     const minPricesDiv = document.createElement('div');
@@ -215,24 +233,31 @@ document.addEventListener('DOMContentLoaded', function() {
             loading.style.display = 'none';
             return;
         }
-        
+        // Validate required city codes (ensure user selected valid options)
+        if (!startPointCode || !destinationCode) {
+            alert('Please select valid origin and destination from the lists');
+            loading.style.display = 'none';
+            return;
+        }
+
         try {
-            // Fetch flights
-            const flightsResponse = await fetch('/search_flights', {
+            // Fetch combined results from /search endpoint
+            const response = await fetch('/search', {
                 method: 'POST',
                 body: formData
             });
             
-            const flightData = await flightsResponse.json();
-            console.log('Flight search response:', flightData);
+            const data = await response.json();
+            console.log('Search response:', data);
             
-            if (!flightsResponse.ok || flightData.error) {
-                console.error('Flight search error:', flightData.error);
-                throw new Error(flightData.error || 'Flight search failed');
+            if (!response.ok || data.error) {
+                console.error('Search error:', data.error);
+                throw new Error(data.error || 'Search failed');
             }
             
-            const flights = Array.isArray(flightData) ? flightData : [];
-            console.log('Processed flight data:', flights);
+            // Process Flights
+            const flights = data.flights || [];
+            debugLog('Processed flight data:', flights);
             
             if (flights.length === 0) {
                 noFlights.style.display = 'block';
@@ -260,18 +285,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     flightElement.innerHTML = `
                         <div class="flight-header">
-                            <h3>${flight.airline || 'Unknown Airline'}</h3>
-                            <span class="flight-number">${flightNumber}</span>
+                            <h3>${escapeHtml(flight.airline) || 'Unknown Airline'}</h3>
+                            <span class="flight-number">${escapeHtml(flightNumber)}</span>
                         </div>
                         <div class="flight-route">
                             <div class="departure">
-                                <span class="time">${departureTime}</span>
-                                <span class="airport">${flight.departureAirport || 'N/A'}</span>
+                                <span class="time">${escapeHtml(departureTime)}</span>
+                                <span class="airport">${escapeHtml(flight.departureAirport) || 'N/A'}</span>
                             </div>
                             <div class="flight-arrow">→</div>
                             <div class="arrival">
-                                <span class="time">${arrivalTime}</span>
-                                <span class="airport">${flight.arrivalAirport || 'N/A'}</span>
+                                <span class="time">${escapeHtml(arrivalTime)}</span>
+                                <span class="airport">${escapeHtml(flight.arrivalAirport) || 'N/A'}</span>
                             </div>
                         </div>
                         <div class="flight-details">
@@ -282,22 +307,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
             
-            // Fetch hotels
-            const hotelsResponse = await fetch('/search_hotels', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const hotelData = await hotelsResponse.json();
-            console.log('Hotel search response:', hotelData);
-            
-            if (!hotelsResponse.ok || hotelData.error) {
-                console.error('Hotel search error:', hotelData.error);
-                throw new Error(hotelData.error || 'Hotel search failed');
-            }
-            
-            const hotels = Array.isArray(hotelData) ? hotelData : [];
-            console.log('Processed hotel data:', hotels);
+            // Process Hotels
+            const hotels = data.hotels || [];
+            debugLog('Processed hotel data:', hotels);
             
             if (hotels.length === 0) {
                 noHotels.style.display = 'block';
@@ -315,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     hotelElement.innerHTML = `
                         <div class="hotel-header">
-                            <h3 class="hotel-name">${hotel.name || 'Hotel Name Not Available'}</h3>
+                            <h3 class="hotel-name">${escapeHtml(hotel.name) || 'Hotel Name Not Available'}</h3>
                             <div class="hotel-rating">
                                 ${'★'.repeat(Math.round(hotel.rating || 0))}${'☆'.repeat(5 - Math.round(hotel.rating || 0))}
                             </div>
@@ -323,13 +335,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="hotel-details">
                             <div class="hotel-location">
                                 <span class="icon">📍</span>
-                                <span>${hotel.location || 'Location Not Available'}</span>
+                                <span>${escapeHtml(hotel.location) || 'Location Not Available'}</span>
                             </div>
                             <div class="hotel-description">
-                                <p>${hotel.description || 'No description available'}</p>
+                                <p>${escapeHtml(hotel.description) || 'No description available'}</p>
                             </div>
                             <div class="hotel-amenities">
-                                ${hotel.amenities ? hotel.amenities.map(amenity => `<span class="amenity-tag">${amenity}</span>`).join('') : ''}
+                                ${hotel.amenities ? hotel.amenities.map(amenity => `<span class="amenity-tag">${escapeHtml(amenity)}</span>`).join('') : ''}
                             </div>
                             <div class="hotel-price">
                                 <span class="label">Price per night:</span>
@@ -348,80 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } finally {
             loading.style.display = 'none';
             
-            // Enable chatbot functionality after search
-            const userMessageInput = document.getElementById('userMessage');
-            const chatForm = document.getElementById('chat-form');
-            const chatButton = chatForm.querySelector('button');
-            
-            // Enable the chat input and button
-            userMessageInput.disabled = false;
-            chatButton.disabled = false;
-            
-            // Set up chat form submission
-            chatForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const message = userMessageInput.value.trim();
-                if (!message) return;
-                
-                // Add user message to chat
-                const chatMessages = document.getElementById('chat-messages');
-                const userMessageElement = document.createElement('div');
-                userMessageElement.className = 'message user';
-                userMessageElement.innerHTML = `<p>${message}</p>`;
-                chatMessages.appendChild(userMessageElement);
-                
-                // Clear input
-                userMessageInput.value = '';
-                
-                // Get destination from search form
-                const destination = document.getElementById('destination').value;
-                const startPoint = document.getElementById('startPoint').value;  // Add this line
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                
-                // Create form data for chatbot request
-                const chatData = new FormData();
-                chatData.append('message', message);
-                chatData.append('destination', destination);
-                chatData.append('startPoint', startPoint);  // Add this line
-                chatData.append('startDate', startDate);
-                chatData.append('endDate', endDate);
-                
-                try {
-                    // Show loading in chat
-                    const loadingElement = document.createElement('div');
-                    loadingElement.className = 'message bot loading';
-                    loadingElement.innerHTML = '<p>Thinking...</p>';
-                    chatMessages.appendChild(loadingElement);
-                    
-                    // Fetch response from chatbot
-                    const response = await fetch('/chatbot', {
-                        method: 'POST',
-                        body: chatData
-                    });
-                    
-                    if (!response.ok) throw new Error('Chatbot request failed');
-                    const data = await response.json();
-                    
-                    // Remove loading message
-                    chatMessages.removeChild(loadingElement);
-                    
-                    // Add bot response
-                    const botMessageElement = document.createElement('div');
-                    botMessageElement.className = 'message bot';
-                    botMessageElement.innerHTML = `<p>${data.response}</p>`;
-                    chatMessages.appendChild(botMessageElement);
-                    
-                    // Scroll to bottom of chat
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                } catch (error) {
-                    console.error('Chatbot error:', error);
-                    const errorElement = document.createElement('div');
-                    errorElement.className = 'message bot error';
-                    errorElement.innerHTML = '<p>Sorry, I encountered an error. Please try again.</p>';
-                    chatMessages.appendChild(errorElement);
-                }
-            });
+            // Chat setup moved to DOM load; nothing to do here now
         }
     });
     
@@ -434,4 +373,79 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Loading city options...');
     loadCityOptions();
     updateMinPrices();
+
+    // Initialize chatbot immediately on page load
+    const userMessageInput = document.getElementById('userMessage');
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm && userMessageInput) {
+        // Avoid attaching multiple listeners
+        if (!chatForm.dataset.listenerAttached) {
+            chatForm.dataset.listenerAttached = 'true';
+            chatForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const message = userMessageInput.value.trim();
+                if (!message) return;
+
+                const chatMessages = document.getElementById('chat-messages');
+                const userMessageElement = document.createElement('div');
+                userMessageElement.className = 'message user';
+                const userP = document.createElement('p');
+                userP.textContent = message; // Use textContent to prevent XSS
+                userMessageElement.appendChild(userP);
+                chatMessages.appendChild(userMessageElement);
+
+                userMessageInput.value = '';
+
+                // Pull current form values if available
+                const destinationEl = document.getElementById('destination');
+                const startPointEl = document.getElementById('startPoint');
+                const startDateEl = document.getElementById('startDate');
+                const endDateEl = document.getElementById('endDate');
+
+                const destination = destinationEl ? destinationEl.value : '';
+                const startPoint = startPointEl ? startPointEl.value : '';
+                const startDate = startDateEl ? startDateEl.value : '';
+                const endDate = endDateEl ? endDateEl.value : '';
+
+                const chatData = new FormData();
+                chatData.append('message', message);
+                chatData.append('destination', destination);
+                chatData.append('startPoint', startPoint);
+                chatData.append('startDate', startDate);
+                chatData.append('endDate', endDate);
+
+                try {
+                    const loadingElement = document.createElement('div');
+                    loadingElement.className = 'message bot loading';
+                    loadingElement.innerHTML = '<p>Thinking...</p>';
+                    chatMessages.appendChild(loadingElement);
+
+                    const response = await fetch('/chatbot', {
+                        method: 'POST',
+                        body: chatData
+                    });
+
+                    if (!response.ok) throw new Error('Chatbot request failed');
+                    const data = await response.json();
+
+                    chatMessages.removeChild(loadingElement);
+
+                    const botMessageElement = document.createElement('div');
+                    botMessageElement.className = 'message bot';
+                    // Note: backend sends pre-formatted HTML responses
+                    // For production, consider using DOMPurify for sanitization
+                    botMessageElement.innerHTML = `<p>${data.response}</p>`;
+                    chatMessages.appendChild(botMessageElement);
+
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    console.error('Chatbot error:', error);
+                    const errorElement = document.createElement('div');
+                    errorElement.className = 'message bot error';
+                    errorElement.innerHTML = '<p>Sorry, I encountered an error. Please try again.</p>';
+                    chatMessages.appendChild(errorElement);
+                }
+            });
+        }
+    }
 });

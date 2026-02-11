@@ -3,10 +3,11 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, setPersistence, browserLocalPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-// Firebase config - FIXED for local development
+// Firebase config - Must use production authDomain for OAuth (Google/GitHub)
+// localhost must be added as authorized domain in Firebase Console
 const firebaseConfig = {
     apiKey: "AIzaSyDTvRaoloxFZNxsEMAW8_RWgfam2ECeT30",
-    authDomain: "localhost", // CHANGED: was "ai-tp-a98af.firebaseapp.com"
+    authDomain: "ai-tp-a98af.firebaseapp.com", // Production domain required for OAuth
     projectId: "ai-tp-a98af",
     storageBucket: "ai-tp-a98af.appspot.com",
     messagingSenderId: "578943308642",

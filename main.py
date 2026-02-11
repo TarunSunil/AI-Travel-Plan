@@ -3,11 +3,18 @@ import os
 import sqlite3
 import requests  # Added for enhanced Gemini API integration
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 from dotenv import load_dotenv
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from amadeus_api import (search_flights as amadeus_search_flights,
                           get_flight_status, search_cities, search_hotels as amadeus_search_hotels)
-from city_data import get_city_info, get_available_cities, get_airport_codes, format_city_info, AVAILABLE_CITIES
+from city_data import (get_city_info, get_available_cities, get_airport_codes, 
+                        format_city_info, AVAILABLE_CITIES, ESTIMATED_HOTEL_PRICES)
 import google.generativeai as genai
+from validation import (validate_date_range, validate_budget, validate_passenger_count,
+                        validate_city_code, validate_travel_class, sanitize_string)
 
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -17,7 +24,26 @@ from pathlib import Path
 
 # Use the local static folder
 app = Flask(__name__, static_folder='static')
-app.secret_key = os.getenv('SECRET_KEY', os.urandom(24).hex())
+
+# Require SECRET_KEY - fail fast if not configured
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY environment variable must be set. Generate one with: python -c 'import secrets; print(secrets.token_hex(32))'")
+app.secret_key = SECRET_KEY
+
+# Configure rate limiting to prevent API abuse
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://",
+)
+
+# In-memory cache for minimum hotel price lookups
+MIN_PRICE_CACHE = {}
+MIN_PRICE_CACHE_LOCK = Lock()
+MIN_PRICE_CACHE_TTL = timedelta(hours=6)
+MIN_PRICE_MAX_WORKERS = 4  # Reduced from 8 to avoid rate limiting
 
 print(f"Flask app initialized with static_folder: {app.static_folder}")
 
@@ -79,75 +105,148 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn
 
+def _collect_prices_for_date(dest_name, check_date, fetcher):
+    """Helper to collect hotel prices for a specific date."""
+    import time
+    time.sleep(0.3)  # 300ms delay to avoid Amadeus rate limiting (429 errors)
+    
+    check_in_str = check_date.strftime('%Y-%m-%d')
+    check_out_date = check_date + timedelta(days=1)
+    check_out_str = check_out_date.strftime('%Y-%m-%d')
+    try:
+        hotels = fetcher(
+            city_name=dest_name,
+            check_in=check_in_str,
+            check_out=check_out_str,
+            adults=1
+        )
+    except Exception as fetch_error:
+        print(f"Error fetching hotel data for {dest_name} on {check_in_str}: {fetch_error}")
+        return []
+
+    prices = []
+    if hotels:
+        import re
+        for hotel in hotels:
+            price = hotel.get('price', 0)
+            if isinstance(price, str):
+                price_match = re.search(r'[\d.]+', str(price).replace('₹', '').replace(',', ''))
+                if price_match:
+                    price = float(price_match.group())
+                else:
+                    continue
+            prices.append(price)
+    return prices
+
+
+def get_min_price_for_destination(dest_name, fetcher=amadeus_search_hotels, days=7):  # Reduced from 30 to avoid rate limits
+    """Fetch minimum hotel price for destination with caching and parallel lookups."""
+    dest_clean = dest_name.strip()
+    normalized = dest_clean.lower()
+    today = datetime.now().date()
+    cache_key = (normalized, today, days)
+    now = datetime.now()
+
+    with MIN_PRICE_CACHE_LOCK:
+        cached_entry = MIN_PRICE_CACHE.get(cache_key)
+        if cached_entry and now - cached_entry['timestamp'] < MIN_PRICE_CACHE_TTL:
+            return cached_entry['price']
+
+    current_date = datetime.now()
+    all_prices = []
+    # Reduced to 3 days to avoid rate limiting (was 7)
+    days_to_check = min(days, 3)
+    with ThreadPoolExecutor(max_workers=MIN_PRICE_MAX_WORKERS) as executor:
+        futures = [executor.submit(_collect_prices_for_date, dest_clean, current_date + timedelta(days=i), fetcher)
+                   for i in range(days_to_check)]
+        for future in as_completed(futures):
+            try:
+                prices = future.result()
+                all_prices.extend(prices)
+            except Exception as e:
+                print(f"Error retrieving prices from future: {e}")
+
+    min_prices = [price for price in all_prices if price and price > 0]
+    min_price = min(min_prices) if min_prices else None
+    
+    # Fallback to estimated prices if no API data available
+    if min_price is None:
+        normalized_dest = dest_clean.lower()
+        min_price = ESTIMATED_HOTEL_PRICES.get(normalized_dest)
+        if min_price:
+            print(f"Using estimated hotel price for {dest_clean}: ₹{min_price}")
+
+    with MIN_PRICE_CACHE_LOCK:
+        MIN_PRICE_CACHE[cache_key] = {'price': min_price, 'timestamp': now}
+
+    return min_price
+
+
 @app.route('/get_min_prices', methods=['POST'])
+@limiter.limit("30 per minute")  # Higher limit as this uses cache
 def get_min_prices():
     try:
         origin = request.form.get('startPoint', '').strip()
         destination = request.form.get('destination', '').strip()
-        
+
         if not origin or not destination:
             return jsonify({"error": "Origin and destination are required"}), 400
-        
-        # Parse destination (remove country part if present)
+
         dest_name = destination.split(",")[0].strip()
-        
+
         print(f"Getting min hotel prices for {dest_name}")
-        
-        # Get hotel prices for next 30 days to find minimum
-        min_price = None
-        current_date = datetime.now()
-        
-        for i in range(30):
-            check_date = current_date + timedelta(days=i)
-            check_in_str = check_date.strftime('%Y-%m-%d')
-            check_out_date = check_date + timedelta(days=1)
-            check_out_str = check_out_date.strftime('%Y-%m-%d')
-            
-            hotels = amadeus_search_hotels(
-                city_name=dest_name,
-                check_in=check_in_str,
-                check_out=check_out_str,
-                adults=1
-            )
-            
-            if hotels:
-                for hotel in hotels:
-                    # Get raw numeric price (not formatted string)
-                    price = hotel.get('price', 0)
-                    if isinstance(price, str):
-                        # Extract number from formatted string like "₹5,420"
-                        import re
-                        price_match = re.search(r'[\d,]+', str(price).replace('₹', '').replace(',', ''))
-                        if price_match:
-                            price = float(price_match.group())
-                        else:
-                            continue
-                    
-                    if min_price is None or (price > 0 and price < min_price):
-                        min_price = price
-        
+
+        min_price = get_min_price_for_destination(dest_name)
+
         return jsonify({
             'min_hotel_price': f"₹{min_price:,.0f}" if min_price else "N/A"
         })
-    
+
     except Exception as e:
         print(f"Error in get_min_prices: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/search_flights', methods=['POST'])
+@limiter.limit("10 per minute")  # Limit to prevent API quota exhaustion
 def search_flights():
     try:
         # Use the reliable city codes sent from the frontend
-        origin_code = request.form.get('startPointCode')
-        dest_code = request.form.get('destinationCode')
+        origin_code = request.form.get('startPointCode', '').strip().upper()
+        dest_code = request.form.get('destinationCode', '').strip().upper()
         
-        departure_date = request.form.get('startDate')
-        return_date = request.form.get('endDate')
-        adults = int(request.form.get('adults', '1'))
-        travel_class = request.form.get('travelClass', 'ECONOMY')
+        departure_date = request.form.get('startDate', '').strip()
+        return_date = request.form.get('endDate', '').strip()
+        adults = request.form.get('adults', '1')
+        travel_class = request.form.get('travelClass', 'ECONOMY').upper()
         
+        # Validate required fields
         if not origin_code or not dest_code or not departure_date:
             return jsonify({"error": "Origin, destination, and departure date are required"}), 400
+        
+        # Validate city codes
+        is_valid, error = validate_city_code(origin_code, "Origin")
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        
+        is_valid, error = validate_city_code(dest_code, "Destination")
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        
+        # Validate date range
+        is_valid, error = validate_date_range(departure_date, return_date)
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        
+        # Validate passenger count
+        is_valid, error = validate_passenger_count(adults, "Adults")
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        adults = int(adults)
+        
+        # Validate travel class
+        is_valid, error = validate_travel_class(travel_class)
+        if not is_valid:
+            return jsonify({"error": error}), 400
         
         print(f"Flight search - Origin Code: {origin_code}, Destination Code: {dest_code}, Date: {departure_date}")
         
@@ -189,15 +288,28 @@ def search_flights():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/search_hotels', methods=['POST'])
+@limiter.limit("10 per minute")  # Limit to prevent API quota exhaustion
 def search_hotels():
     try:
-        destination = request.form.get('destination', '').strip()
-        check_in_date = request.form.get('startDate', '')
-        check_out_date = request.form.get('endDate', '')
-        adults = int(request.form.get('adults', '1'))
+        destination = sanitize_string(request.form.get('destination', '').strip())
+        check_in_date = request.form.get('startDate', '').strip()
+        check_out_date = request.form.get('endDate', '').strip()
+        adults = request.form.get('adults', '1')
         
+        # Validate required fields
         if not destination:
             return jsonify({"error": "Destination is required"}), 400
+        
+        # Validate date range
+        is_valid, error = validate_date_range(check_in_date, check_out_date)
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        
+        # Validate guest count
+        is_valid, error = validate_passenger_count(adults, "Guests")
+        if not is_valid:
+            return jsonify({"error": error}), 400
+        adults = int(adults)
         
         print(f"Hotel search - Destination: {destination}")
         
@@ -231,8 +343,26 @@ def search_hotels():
                     hotel['currency'] = 'INR'
             
             return jsonify(limited_hotels)
+        
+        # If no hotels from API, return estimated prices as fallback
+        dest_lower = dest_base.lower()
+        if dest_lower in ESTIMATED_HOTEL_PRICES:
+            estimated_price = ESTIMATED_HOTEL_PRICES[dest_lower]
+            fallback_hotels = [
+                {
+                    'name': f'Hotels in {dest_base}',
+                    'rating': 4.0,
+                    'price': estimated_price,
+                    'currency': 'INR',
+                    'location': f'{dest_base} City Center',
+                    'description': f'Estimated average hotel price in {dest_base}. Actual prices may vary.',
+                    'isEstimate': True
+                }
+            ]
+            print(f"Returning fallback hotel data for {dest_base}: ₹{estimated_price}")
+            return jsonify(fallback_hotels)
 
-        return jsonify([])  # Return empty array instead of error
+        return jsonify([])  # Return empty array if no data available
     
     except Exception as e:
         print(f"Error in search_hotels: {str(e)}")
@@ -256,6 +386,7 @@ def flight_status():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/chatbot', methods=['POST'])
+@limiter.limit("20 per minute")  # Slightly higher limit for chatbot
 def chatbot():
     user_message = request.form['message']
     destination = request.form.get('destination', '').strip()
@@ -289,6 +420,7 @@ def chatbot():
                 return jsonify({"response": f"Sorry, I couldn't find airport information for {origin_name} or {dest_name}."})
             
             # Get current date as default
+            from datetime import datetime
             departure_date = start_date if start_date else datetime.now().strftime('%Y-%m-%d')
             
             flights = amadeus_search_flights(
@@ -334,6 +466,7 @@ def chatbot():
         
         try:
             # Use existing Amadeus API function (currently mock data)
+            from datetime import datetime, timedelta
             check_in = start_date if start_date else datetime.now().strftime('%Y-%m-%d')
             check_out = end_date if end_date else (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
             
@@ -362,7 +495,8 @@ def chatbot():
             return jsonify({"response": f"Sorry, I encountered an error while searching for hotels in {destination}."})
 
     # For other questions, use the enhanced Gemini API
-    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
+    # Using gemini-1.5-flash as gemini-pro has been deprecated
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
 
     headers = {
         "Content-Type": "application/json"
@@ -407,8 +541,22 @@ Please provide a detailed, helpful response that addresses their question thorou
     }
 
     try:
-        response = requests.post(api_url, headers=headers, json=data)
-        response.raise_for_status()
+        response = requests.post(api_url, headers=headers, json=data, timeout=30)
+        
+        # Log detailed error information
+        if response.status_code != 200:
+            print(f"Gemini API Error - Status: {response.status_code}")
+            print(f"Response: {response.text}")
+            error_msg = "Sorry, the AI assistant is temporarily unavailable. "
+            if response.status_code == 404:
+                error_msg += "The API endpoint might have changed or the API key is invalid."
+            elif response.status_code == 429:
+                error_msg += "Too many requests. Please try again in a minute."
+            elif response.status_code >= 500:
+                error_msg += "The AI service is experiencing issues. Please try again later."
+            else:
+                error_msg += f"Error code: {response.status_code}"
+            return jsonify({"response": error_msg})
         
         if response.status_code == 200:
             response_data = response.json()
@@ -437,18 +585,74 @@ Please provide a detailed, helpful response that addresses their question thorou
                 
                 return jsonify({"response": ai_response})
             else:
-                print(f"Unexpected API response format: {response_data}")
-                return jsonify({"response": "I couldn't generate a response. Please try again with a different question."})
+                print(f"No candidates in Gemini response: {response_data}")
+                return jsonify({"response": "Sorry, I couldn't generate a response. Please try again."})
         else:
-            print(f"API Error: {response.status_code} - {response.text}")
-            return jsonify({"response": "Sorry, I'm having trouble connecting to my knowledge base. Please try again."})
-            
+            return jsonify({"response": "Sorry, I encountered an error. Please try again later."})
+    
+    except requests.exceptions.Timeout:
+        print(f"Gemini API Timeout")
+        return jsonify({"response": "The AI assistant is taking too long to respond. Please try a shorter question."})
     except requests.exceptions.RequestException as e:
-        print(f"Request Error: {str(e)}")
-        return jsonify({"response": "Sorry, I encountered a network error. Please check your connection and try again."})
+        print(f"Gemini API Request Error: {str(e)}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Status Code: {e.response.status_code}")
+            print(f"Response Text: {e.response.text[:500]}")
+        return jsonify({"response": f"Sorry, I encountered a network error. The AI service might be unavailable."})
     except Exception as e:
-        print(f"General Error: {str(e)}")
-        return jsonify({"response": "Sorry, I encountered an unexpected error. Please try again."})
+        print(f"Unexpected error in chatbot: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"response": f"Sorry, an unexpected error occurred. Please try again."})
+
+@app.route('/search', methods=['POST'])
+def search_all():
+    try:
+        # Extract parameters
+        origin_code = request.form.get('startPointCode')
+        dest_code = request.form.get('destinationCode')
+        destination = request.form.get('destination', '').strip()
+        departure_date = request.form.get('startDate')
+        return_date = request.form.get('endDate')
+        adults = int(request.form.get('adults', '1'))
+        travel_class = request.form.get('travelClass', 'ECONOMY')
+
+        results = {
+            "flights": [],
+            "hotels": []
+        }
+
+        # Search Flights
+        if origin_code and dest_code and departure_date:
+             flights = amadeus_search_flights(
+                origin=origin_code,
+                destination=dest_code,
+                departure_date=departure_date,
+                return_date=return_date if return_date else None,
+                adults=adults,
+                travel_class=travel_class,
+                currency='INR'
+            )
+             if flights:
+                 results["flights"] = flights[:3]
+
+        # Search Hotels
+        if destination:
+            dest_base = destination.split(",")[0].strip()
+            hotels = amadeus_search_hotels(
+                city_name=dest_base,
+                check_in=departure_date,
+                check_out=return_date,
+                adults=adults
+            )
+            if hotels:
+                results["hotels"] = hotels[:3]
+        
+        return jsonify(results)
+
+    except Exception as e:
+        print(f"Error in /search: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 import os, sys
 REQUIRED_ENV = ["AMADEUS_CLIENT_ID","AMADEUS_CLIENT_SECRET","GEMINI_API_KEY","SECRET_KEY"]

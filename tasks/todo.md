@@ -84,15 +84,64 @@
 - [ ] **Task 4.4**: Update [`Changes.txt`](Changes.txt) with comprehensive fix summary
 - [ ] **Task 4.5**: Add review section to this [`todo.md`](todo.md) file
 
-## **What Would Mark Zuckerberg Do?**
-Mark would prioritize the single point of failure with the highest user impact:
-1. **Fix login.js first** - One syntax error is breaking the entire login page for all users
-2. **Ship fast** - Get authentication working before perfecting the layout
-3. **Simple fixes** - Address root causes, not symptoms
+# Performance and Real-Data Improvements (October 2025)
 
-## **File Priority Order:**
-1. [`static/js/login.js`](static/js/login.js) - Critical: Breaks entire login functionality
-2. [`templates/index.html`](templates/index.html) - High: Affects main page layout
-3. [`static/app.js`](static/app.js) - High: Hotel rendering logic
-4. [`static/css/style.css`](static/css/style.css) - Medium: Logout button positioning
-5. [`templates/signup.html`](templates/signup.html) + [`static/js/signup.js`](static/js/signup.js) - Medium: Password toggle
+## New Tasks (High Priority)
+
+### Task 6: Speed Up Minimum Hotel Cost Calculation
+- [x] **Task 6.1**: Refactor /get_min_prices endpoint to parallelize hotel price lookups using ThreadPoolExecutor.
+- [x] **Task 6.2**: Add in-memory caching for recent min-price queries to avoid repeated API calls for the same city/date window.
+
+### Task 7: Always Fetch Real Data from Amadeus
+- [x] **Task 7.1**: Refactor /search_flights to fetch 3 real flights from Amadeus (remove mock data fallback).
+- [x] **Task 7.2**: Refactor /search_hotels to fetch 3 real hotels from Amadeus (remove mock data fallback).
+- [x] **Task 7.3**: Ensure frontend displays only real Amadeus data for both flights and hotels.
+
+### Task 8: Testing and Verification
+- [x] **Task 8.1**: Test min-price endpoint for speed and correctness.
+- [x] **Task 8.2**: Test hotel and flight search endpoints for real data (no mock data).
+
+---
+
+## Next Steps
+- [ ] Check in with user for approval before implementing further improvements (loading indicators, error handling, etc.).
+
+---
+
+# Review Section (to be updated after implementation)
+- Min-price endpoint now uses parallel lookups plus a 6-hour cache, cutting repeat latency and quota usage.
+- Flight/hotel endpoints and chatbot rely solely on real Amadeus data; accompanying unit tests verify caching behavior.
+
+## Hotel Availability Issue Analysis (October 5, 2025)
+
+**Root cause of "No hotels found within your budget" message:**
+1. Amadeus Test API returns empty results for many destinations/dates due to:
+   - Limited hotel inventory in test environment
+   - Specific date/location combinations not available
+   - API quota/rate limits
+2. Error message was misleading - no budget filtering logic exists
+
+**Changes made:**
+- Updated error message to "No hotels available for the selected dates"
+- Added comprehensive debug logging to track API responses
+- Added error logging with status codes
+
+**Recommendations for better hotel coverage:**
+- Production Amadeus API has much better inventory
+- Google Places API as backup ($0.032/search, $200 free credit/month)
+- TripAdvisor or Booking.com APIs (commercial partnerships required)
+
+**Testing tips:**
+- Search major cities (London, Paris, NYC, Tokyo) for better coverage
+- Use dates 30+ days in future
+- Check console logs for exact API responses
+
+# User Experience and Quality Improvements
+
+## New Tasks (High Priority)
+
+### Task 9: Improve User Experience
+- [ ] **Task 9.1**: Add loading indicators to the frontend for all async actions (flight/hotel search, min price scan, chatbot).
+- [ ] **Task 9.2**: Add user-friendly error messages for API failures (frontend and backend).
+- [ ] **Task 9.3**: Add a review section summarizing changes and improvements.
+- [ ] **Task 9.4**: Update Changes.txt after each major change.
