@@ -19,7 +19,7 @@ from validation import (validate_date_range, validate_budget, validate_passenger
 load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Set up static folder in the project directory
+# Set up static folder in the project directory (ensure it exists)
 from pathlib import Path
 
 # Use the local static folder
