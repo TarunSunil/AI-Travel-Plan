@@ -167,8 +167,9 @@ def validate_city_code(code: str, field_name: str = "City") -> Tuple[bool, Optio
         return False, f"{field_name} code is required"
     
     # IATA codes are 3 letters
-    if not re.match(r'^[A-Z]{3}$', code.upper()):
-        return False, f"{field_name} code must be a 3-letter IATA code"
+    normalized = code.strip().upper()
+    if not normalized or not re.match(r'^[A-Z]{3}$', normalized):
+        return False, f"{field_name} code must be a 3-letter IATA code (e.g. DEL, BOM)"
     
     return True, None
 

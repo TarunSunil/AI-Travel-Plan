@@ -1,4 +1,5 @@
 import { auth, db } from './firebase-config.js';
+import { getErrorMessage } from './firebase-errors.js';
 import { 
     signInWithEmailAndPassword, 
     GoogleAuthProvider, 
@@ -237,23 +238,6 @@ function showLoading(loading) {
         loginBtn.innerHTML = '<span>Sign In</span> <i class="fas fa-arrow-right"></i>';
         loginBtn.disabled = false;
     }
-}
-
-function getErrorMessage(errorCode) {
-    const errorMessages = {
-        'auth/user-not-found': 'No account found with this email address.',
-        'auth/wrong-password': 'Incorrect password. Please try again.',
-        'auth/invalid-email': 'Please enter a valid email address.',
-        'auth/user-disabled': 'This account has been disabled.',
-        'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
-        'auth/network-request-failed': 'Network error. Please check your connection.',
-        'auth/popup-closed-by-user': 'Sign-in was cancelled.',
-        'auth/cancelled-popup-request': 'Only one popup request is allowed at a time.',
-        'auth/popup-blocked': 'Popup was blocked by the browser.',
-        'default': 'An error occurred during sign-in. Please try again.'
-    };
-    
-    return errorMessages[errorCode] || errorMessages['default'];
 }
 
 // Forgot password functionality

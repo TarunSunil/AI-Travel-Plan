@@ -18,13 +18,14 @@ def check_python_version():
 
 def check_dependencies():
     """Check if required dependencies are installed"""
-    try:
-        import mysql.connector
-        print("✅ mysql-connector-python is installed")
-    except ImportError:
-        print("❌ mysql-connector-python is not installed. Installing...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "mysql-connector-python"])
-        print("✅ mysql-connector-python installed successfully")
+    required = ['flask', 'dotenv', 'requests', 'waitress', 'flask_limiter']
+    for module in required:
+        try:
+            __import__(module)
+            print(f"✅ {module} found")
+        except ImportError:
+            print(f"❌ {module} missing — installing...")
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install', module])
 
 def check_env_file():
     """Check if .env file exists and create if needed"""

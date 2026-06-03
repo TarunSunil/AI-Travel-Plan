@@ -81,29 +81,14 @@ def init_db():
         print(f"Database error during initialization: {e}")
         if conn:
             conn.rollback()
+            conn.close()
         raise
     except Exception as e:
         print(f"Error during database initialization: {e}")
         if conn:
             conn.rollback()
-        raise
-    finally:
-        if conn:
             conn.close()
-    
-    cursor.execute('''
-        CREATE TABLE api_cache (
-            route_key TEXT NOT NULL,
-            data_type TEXT NOT NULL,
-            response_data TEXT NOT NULL,
-            last_updated TIMESTAMP NOT NULL,
-            expires_at TIMESTAMP NOT NULL,
-            PRIMARY KEY (route_key, data_type)
-        )
-    ''')
-
-    conn.commit()
-    return conn
+        raise
 
 def populate_sample_data(conn):
     cursor = conn.cursor()
@@ -413,80 +398,22 @@ def populate_sample_data(conn):
     conn.commit()
 
 if __name__ == '__main__':
+    conn = None
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Initialize database tables
-        cursor.execute('DROP TABLE IF EXISTS flights')
-        cursor.execute('DROP TABLE IF EXISTS hotels')
-        cursor.execute('DROP TABLE IF EXISTS min_prices')
-        cursor.execute('DROP TABLE IF EXISTS api_cache')
-        
-        print("Old tables dropped successfully")
-        
-        # Create new tables with all required fields
-        cursor.execute('''
-            CREATE TABLE flights (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                origin TEXT NOT NULL,
-                destination TEXT NOT NULL,
-                price REAL NOT NULL,
-                date DATE NOT NULL,
-                airline TEXT NOT NULL
-            )
-        ''')
-        print("Created flights table")
-
-        cursor.execute('''
-            CREATE TABLE hotels (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                location TEXT NOT NULL,
-                price_per_night REAL NOT NULL,
-                rating REAL NOT NULL
-            )
-        ''')
-        print("Created hotels table")
-
-        cursor.execute('''
-            CREATE TABLE min_prices (
-                origin TEXT NOT NULL,
-                destination TEXT NOT NULL,
-                min_flight_price REAL NOT NULL,
-                min_hotel_price REAL NOT NULL,
-                PRIMARY KEY (origin, destination)
-            )
-        ''')
-        print("Created min_prices table")
-
-        cursor.execute('''
-            CREATE TABLE api_cache (
-                route_key TEXT NOT NULL,
-                data_type TEXT NOT NULL,
-                response_data TEXT NOT NULL,
-                last_updated TIMESTAMP NOT NULL,
-                expires_at TIMESTAMP NOT NULL,
-                PRIMARY KEY (route_key, data_type)
-            )
-        ''')
-        print("Created api_cache table")
-        
-        # Populate with sample data
+        conn = init_db()
         populate_sample_data(conn)
-        
         conn.commit()
+        conn.close()
         print("Database initialized and populated successfully")
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         if conn:
             conn.rollback()
+            conn.close()
         raise
     except Exception as e:
         print(f"Error: {e}")
         if conn:
             conn.rollback()
-        raise
-    finally:
-        if conn:
             conn.close()
+        raise

@@ -378,7 +378,7 @@ def get_flight_status(carrier_code, flight_number, departure_date):
     }
     
     try:
-        response = requests.get(url, headers=headers, params=params)
+        response = _request_with_retry('GET', url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
         

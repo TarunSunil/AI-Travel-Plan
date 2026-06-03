@@ -19,6 +19,8 @@ def app():
     flask_app.config.update({
         "TESTING": True,
         "SECRET_KEY": "test-secret-key-for-testing-only",
+        # Disable CSRF for unit tests; production keeps CSRF enabled.
+        "WTF_CSRF_ENABLED": False,
     })
     
     yield flask_app

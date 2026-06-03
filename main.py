@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import os
+import sys
 import sqlite3
 import requests  # Added for enhanced Gemini API integration
 from datetime import datetime, timedelta
@@ -8,11 +9,15 @@ from threading import Lock
 from dotenv import load_dotenv
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import CSRFProtect
 from amadeus_api import (search_flights as amadeus_search_flights,
                           get_flight_status, search_cities, search_hotels as amadeus_search_hotels)
 from city_data import (get_city_info, get_available_cities, get_airport_codes, 
                         format_city_info, AVAILABLE_CITIES, ESTIMATED_HOTEL_PRICES)
-import google.generativeai as genai
+import re
+# Active DB: SQLite via database.py
+# To migrate to Supabase PostgreSQL → see docs/SUPABASE_MIGRATION.md
+# and swap: from supabase_db import get_db_connection
 from validation import (validate_date_range, validate_budget, validate_passenger_count,
                         validate_city_code, validate_travel_class, sanitize_string)
 
@@ -31,12 +36,33 @@ if not SECRET_KEY:
     raise ValueError("SECRET_KEY environment variable must be set. Generate one with: python -c 'import secrets; print(secrets.token_hex(32))'")
 app.secret_key = SECRET_KEY
 
+# CSRF protection for all POST routes (AJAX FormData includes csrf_token hidden inputs)
+csrf = CSRFProtect(app)
+
+# Inject firebase config into templates from environment variables
+FIREBASE_CONFIG = {
+    "apiKey": os.getenv("FIREBASE_API_KEY", ""),
+    "authDomain": os.getenv("FIREBASE_AUTH_DOMAIN", ""),
+    "projectId": os.getenv("FIREBASE_PROJECT_ID", ""),
+    "storageBucket": os.getenv("FIREBASE_STORAGE_BUCKET", ""),
+    "messagingSenderId": os.getenv("FIREBASE_MESSAGING_SENDER_ID", ""),
+    "appId": os.getenv("FIREBASE_APP_ID", ""),
+}
+
+
+@app.context_processor
+def inject_firebase_config():
+    return {"firebase_config": FIREBASE_CONFIG}
+
 # Configure rate limiting to prevent API abuse
+REDIS_URL = os.getenv("REDIS_URL")
+storage_uri = REDIS_URL if REDIS_URL else "memory://"
+
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://",
+    storage_uri=storage_uri,
 )
 
 # In-memory cache for minimum hotel price lookups
@@ -126,7 +152,6 @@ def _collect_prices_for_date(dest_name, check_date, fetcher):
 
     prices = []
     if hotels:
-        import re
         for hotel in hotels:
             price = hotel.get('price', 0)
             if isinstance(price, str):
@@ -139,8 +164,11 @@ def _collect_prices_for_date(dest_name, check_date, fetcher):
     return prices
 
 
-def get_min_price_for_destination(dest_name, fetcher=amadeus_search_hotels, days=7):  # Reduced from 30 to avoid rate limits
-    """Fetch minimum hotel price for destination with caching and parallel lookups."""
+def get_min_price_for_destination(dest_name, fetcher=amadeus_search_hotels, days=3):
+    """
+    Fetch minimum hotel price for destination with caching and parallel lookups.
+    Capped at 3 days by default to avoid Amadeus rate limits.
+    """
     dest_clean = dest_name.strip()
     normalized = dest_clean.lower()
     today = datetime.now().date()
@@ -154,8 +182,7 @@ def get_min_price_for_destination(dest_name, fetcher=amadeus_search_hotels, days
 
     current_date = datetime.now()
     all_prices = []
-    # Reduced to 3 days to avoid rate limiting (was 7)
-    days_to_check = min(days, 3)
+    days_to_check = days
     with ThreadPoolExecutor(max_workers=MIN_PRICE_MAX_WORKERS) as executor:
         futures = [executor.submit(_collect_prices_for_date, dest_clean, current_date + timedelta(days=i), fetcher)
                    for i in range(days_to_check)]
@@ -270,7 +297,6 @@ def search_flights():
                     price_val = flight['price']
                     if isinstance(price_val, str):
                         # Extract numeric value from formatted string
-                        import re
                         price_match = re.search(r'[\d.]+', str(price_val).replace('₹', '').replace(',', ''))
                         if price_match:
                             flight['price'] = float(price_match.group())
@@ -333,7 +359,6 @@ def search_hotels():
                     price_val = hotel['price']
                     if isinstance(price_val, str):
                         # Extract numeric value from formatted string
-                        import re
                         price_match = re.search(r'[\d.]+', str(price_val).replace('₹', '').replace(',', ''))
                         if price_match:
                             hotel['price'] = float(price_match.group())
@@ -420,7 +445,6 @@ def chatbot():
                 return jsonify({"response": f"Sorry, I couldn't find airport information for {origin_name} or {dest_name}."})
             
             # Get current date as default
-            from datetime import datetime
             departure_date = start_date if start_date else datetime.now().strftime('%Y-%m-%d')
             
             flights = amadeus_search_flights(
@@ -445,7 +469,6 @@ def chatbot():
                 # Format the departure time for display
                 try:
                     if departure != 'N/A':
-                        from datetime import datetime
                         dt = datetime.fromisoformat(departure.replace('Z', '+00:00'))
                         departure = dt.strftime('%H:%M')
                 except:
@@ -466,7 +489,6 @@ def chatbot():
         
         try:
             # Use existing Amadeus API function (currently mock data)
-            from datetime import datetime, timedelta
             check_in = start_date if start_date else datetime.now().strftime('%Y-%m-%d')
             check_out = end_date if end_date else (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
             
@@ -564,7 +586,7 @@ Please provide a detailed, helpful response that addresses their question thorou
                 ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
                 
                 # Clean up and format the response
-                ai_response = ai_response.replace('**', '<strong>').replace('**', '</strong>')
+                ai_response = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', ai_response)
                 ai_response = ai_response.replace('*', '•')
                 ai_response = ai_response.replace('\n\n', '<br><br>')
                 ai_response = ai_response.replace('\n', '<br>')
@@ -578,7 +600,7 @@ Please provide a detailed, helpful response that addresses their question thorou
                         response_data = response.json()
                         if 'candidates' in response_data and len(response_data['candidates']) > 0:
                             ai_response = response_data['candidates'][0]['content']['parts'][0]['text']
-                            ai_response = ai_response.replace('**', '<strong>').replace('**', '</strong>')
+                            ai_response = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', ai_response)
                             ai_response = ai_response.replace('*', '•')
                             ai_response = ai_response.replace('\n\n', '<br><br>')
                             ai_response = ai_response.replace('\n', '<br>')
@@ -654,11 +676,25 @@ def search_all():
         print(f"Error in /search: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-import os, sys
 REQUIRED_ENV = ["AMADEUS_CLIENT_ID","AMADEUS_CLIENT_SECRET","GEMINI_API_KEY","SECRET_KEY"]
 missing = [k for k in REQUIRED_ENV if not os.getenv(k)]
 if missing:
     print(f"[BOOT][ERROR] Missing: {', '.join(missing)}", file=sys.stderr)
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify({"error": "Resource not found"}), 404
+
+
+@app.errorhandler(429)
+def rate_limited(e):
+    return jsonify({"error": "Too many requests. Please slow down."}), 429
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return jsonify({"error": "Internal server error"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

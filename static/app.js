@@ -16,35 +16,49 @@ function debugLog(...args) {
     }
 }
 
+// Debug error wrapper - only logs in development mode
+function debugError(...args) {
+    if (DEV_MODE) {
+        console.error(...args);
+    }
+}
+
+let chatListenerAttached = false;
+
+function getCsrfToken() {
+    const el = document.querySelector('input[name="csrf_token"]');
+    return el ? el.value : null;
+}
+
 // Wait for the DOM to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Get DOM elements
     const searchForm = document.getElementById('search-form');
-    if (!searchForm) console.error('search-form not found');
+    if (!searchForm) debugError('search-form not found');
     
     const flightsList = document.getElementById('flights-list');
-    if (!flightsList) console.error('flights-list not found');
+    if (!flightsList) debugError('flights-list not found');
     
     const hotelsList = document.getElementById('hotels-list');
-    if (!hotelsList) console.error('hotels-list not found');
+    if (!hotelsList) debugError('hotels-list not found');
     
     const loading = document.getElementById('loading');
-    if (!loading) console.error('loading element not found');
+    if (!loading) debugError('loading element not found');
     
     const noFlights = document.getElementById('no-flights');
-    if (!noFlights) console.error('no-flights element not found');
+    if (!noFlights) debugError('no-flights element not found');
     
     const noHotels = document.getElementById('no-hotels');
-    if (!noHotels) console.error('no-hotels element not found');
+    if (!noHotels) debugError('no-hotels element not found');
     
     const startPointSelect = document.getElementById('startPoint');
-    if (!startPointSelect) console.error('startPoint not found');
+    if (!startPointSelect) debugError('startPoint not found');
     
     const destinationSelect = document.getElementById('destination');
-    if (!destinationSelect) console.error('destination not found');
+    if (!destinationSelect) debugError('destination not found');
     
     const budgetTooltip = document.getElementById('budget-tooltip');
-    if (!budgetTooltip) console.error('budget-tooltip not found');
+    if (!budgetTooltip) debugError('budget-tooltip not found');
     
     debugLog('DOM elements initialized');
     
@@ -62,13 +76,52 @@ document.addEventListener('DOMContentLoaded', function() {
         searchForm.insertBefore(minPricesDiv, dateGroup);
     }
     
+    // Function to populate a select element
+    function populateSelect(select, cities) {
+        // Keep the first option (placeholder)
+        const firstOption = select.options[0];
+        select.innerHTML = '';
+        select.appendChild(firstOption);
+
+        // Add city options
+        cities.forEach(city => {
+            const option = document.createElement('option');
+            const cityText = `${city.name}, ${city.country}`;
+            option.value = cityText;  // Store just city and country as value
+            option.textContent = cityText;  // Display city and country
+            option.setAttribute('data-city-code', city.city_code);  // Store city code for API calls
+            select.appendChild(option);
+        });
+    }
+
+    function populateBothSelects(cities) {
+        if (!startPointSelect || !destinationSelect) {
+            debugError('Could not find select elements');
+            return;
+        }
+        populateSelect(startPointSelect, cities);
+        populateSelect(destinationSelect, cities);
+    }
+
     // Function to load city options into dropdowns
     async function loadCityOptions() {
+        const cached = sessionStorage.getItem('availableCities');
+        if (cached) {
+            try {
+                populateBothSelects(JSON.parse(cached));
+                return;
+            } catch (e) {
+                // ignore cache parse failure and refetch
+            }
+        }
         try {
             // Get list of all available cities
+            const csrfToken = getCsrfToken();
+            const reqBody = new FormData();
+            if (csrfToken) reqBody.append('csrf_token', csrfToken);
             const response = await fetch('/search_cities', {
                 method: 'POST',
-                body: new FormData()
+                body: reqBody
             });
             
             if (!response.ok) {
@@ -76,46 +129,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const data = await response.json();
-            console.log('Received cities data:', data);
-            
-            if (!startPointSelect || !destinationSelect) {
-                console.error('Could not find select elements');
-                return;
-            }
-            
-            // Function to populate a select element
-            function populateSelect(select, cities) {
-                // Keep the first option (placeholder)
-                const firstOption = select.options[0];
-                select.innerHTML = '';
-                select.appendChild(firstOption);
-                
-                // Add city options
-                cities.forEach(city => {
-                    const option = document.createElement('option');
-                    const cityText = `${city.name}, ${city.country}`;
-                    option.value = cityText;  // Store just city and country as value
-                    option.textContent = cityText;  // Display city and country
-                    option.setAttribute('data-city-code', city.city_code);  // Store city code for API calls
-                    select.appendChild(option);
-                });
-            }
+            debugLog('Received cities data:', data);
             
             // Get the list of cities from available cities
             const cities = data.suggestions || data.available_cities || [];
-            console.log('Cities to populate:', cities);
+            debugLog('Cities to populate:', cities);
             
             if (cities.length === 0) {
-                console.error('No cities available');
+                debugError('No cities available');
                 return;
             }
             
             // Populate both dropdowns
-            populateSelect(startPointSelect, cities);
-            populateSelect(destinationSelect, cities);
+            populateBothSelects(cities);
+            sessionStorage.setItem('availableCities', JSON.stringify(cities));
             
         } catch (error) {
-            console.error('Error loading cities:', error);
+            debugError('Error loading cities:', error);
             // Add error message to dropdowns
             [startPointSelect, destinationSelect].forEach(select => {
                 select.innerHTML = '<option value="">Error loading cities</option>';
@@ -149,6 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Create form data
         const formData = new FormData();
+        const csrfToken = getCsrfToken();
+        if (csrfToken) formData.append('csrf_token', csrfToken);
         formData.append('startPoint', startPoint);
         formData.append('destination', destination);
         
@@ -178,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Don't display the minPricesDiv anymore
             minPricesDiv.style.display = 'none';
         } catch (error) {
-            console.error('Error fetching minimum prices:', error);
+            debugError('Error fetching minimum prices:', error);
             minPricesDiv.style.display = 'none';
             budgetTooltip.textContent = 'Unable to fetch hotel prices. Please try again';
         }
@@ -248,10 +280,10 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             const data = await response.json();
-            console.log('Search response:', data);
+            debugLog('Search response:', data);
             
             if (!response.ok || data.error) {
-                console.error('Search error:', data.error);
+                debugError('Search error:', data.error);
                 throw new Error(data.error || 'Search failed');
             }
             
@@ -354,7 +386,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
         } catch (error) {
-            console.error('Error:', error);
+            debugError('Error:', error);
             flightsList.innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
             hotelsList.innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
         } finally {
@@ -370,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('endDate').min = today;
     
     // Initialize by loading cities and updating min prices
-    console.log('Loading city options...');
+    debugLog('Loading city options...');
     loadCityOptions();
     updateMinPrices();
 
@@ -378,15 +410,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const userMessageInput = document.getElementById('userMessage');
     const chatForm = document.getElementById('chat-form');
     if (chatForm && userMessageInput) {
-        // Avoid attaching multiple listeners
-        if (!chatForm.dataset.listenerAttached) {
-            chatForm.dataset.listenerAttached = 'true';
+        if (!chatListenerAttached) {
+            chatListenerAttached = true;
             chatForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 const message = userMessageInput.value.trim();
                 if (!message) return;
 
                 const chatMessages = document.getElementById('chat-messages');
+                if (!chatMessages) { debugError('chat-messages element not found'); return; }
                 const userMessageElement = document.createElement('div');
                 userMessageElement.className = 'message user';
                 const userP = document.createElement('p');
@@ -408,6 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const endDate = endDateEl ? endDateEl.value : '';
 
                 const chatData = new FormData();
+                const csrfToken = chatForm.querySelector('input[name="csrf_token"]')?.value || getCsrfToken();
+                if (csrfToken) chatData.append('csrf_token', csrfToken);
                 chatData.append('message', message);
                 chatData.append('destination', destination);
                 chatData.append('startPoint', startPoint);
@@ -433,13 +467,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const botMessageElement = document.createElement('div');
                     botMessageElement.className = 'message bot';
                     // Note: backend sends pre-formatted HTML responses
-                    // For production, consider using DOMPurify for sanitization
-                    botMessageElement.innerHTML = `<p>${data.response}</p>`;
+                    botMessageElement.innerHTML = `<p>${DOMPurify.sanitize(data.response)}</p>`;
                     chatMessages.appendChild(botMessageElement);
 
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 } catch (error) {
-                    console.error('Chatbot error:', error);
+                    debugError('Chatbot error:', error);
                     const errorElement = document.createElement('div');
                     errorElement.className = 'message bot error';
                     errorElement.innerHTML = '<p>Sorry, I encountered an error. Please try again.</p>';

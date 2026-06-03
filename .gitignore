@@ -21,7 +21,6 @@ travel_planner.db
 
 # Node (if present)
 node_modules/
-package-lock.json
 
 # Logs / caches
 *.log

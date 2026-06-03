@@ -1,4 +1,5 @@
 import { auth, db } from './firebase-config.js';
+import { getErrorMessage } from './firebase-errors.js';
 import { 
     createUserWithEmailAndPassword, 
     updateProfile,
@@ -268,26 +269,6 @@ function showLoading(loading) {
         signupBtn.innerHTML = '<span>Create Account</span> <i class="fas fa-arrow-right"></i>';
         signupBtn.disabled = false;
     }
-}
-
-function getErrorMessage(errorCode) {
-    const errorMessages = {
-        'auth/email-already-in-use': 'An account with this email already exists.',
-        'auth/invalid-email': 'Please enter a valid email address.',
-        'auth/operation-not-allowed': 'Account creation is currently disabled.',
-        'auth/weak-password': 'Password is too weak. Please choose a stronger password.',
-        'auth/network-request-failed': 'Network error. Please check your connection.',
-        'auth/popup-closed-by-user': 'Sign-in popup was closed. Please try again.',
-        'auth/popup-blocked': 'Popup was blocked by your browser. Please allow popups for this site.',
-        'auth/cancelled-popup-request': 'Only one popup request is allowed at a time.',
-        'auth/unauthorized-domain': 'This domain is not authorized for Firebase Auth. Please add localhost:5000 to authorized domains in Firebase Console.',
-        'auth/invalid-api-key': 'Invalid Firebase API key. Please check your Firebase configuration.',
-        'auth/app-not-authorized': 'This app is not authorized to use Firebase Authentication.',
-        'auth/quota-exceeded': 'Quota exceeded. Please try again later.',
-        'default': 'An error occurred during account creation. Please try again.'
-    };
-    
-    return errorMessages[errorCode] || errorMessages['default'];
 }
 
 /* Password field HTML (for reference)
