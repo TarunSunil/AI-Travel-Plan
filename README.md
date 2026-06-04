@@ -29,7 +29,7 @@
 
 ## 🚀 Live Demo
 
-[Visit the deployed application](https://travel-planner-git-main-tarunsunils-projects.vercel.app)
+[Visit the deployed application](ai-travel-planner-seven-flax.vercel.app)
 
 ## 🛠️ Technology Stack
 
