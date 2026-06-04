@@ -230,7 +230,14 @@ function showError(message) {
 }
 
 function showLoading(loading) {
-    const loginBtn = document.querySelector('.login-btn');
+    const loginBtn =
+    document.querySelector('.submit-btn') ||
+    document.querySelector('.login-btn');
+
+if (!loginBtn) {
+    console.error('Login button not found');
+    return;
+}
     if (loading) {
         loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Signing in...</span>';
         loginBtn.disabled = true;

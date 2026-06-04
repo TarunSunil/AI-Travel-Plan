@@ -1,484 +1,361 @@
-// Development mode - set to false in production to disable debug logging
+// ── CONFIG ───────────────────────────────────────────────────────────────────
 const DEV_MODE = false;
 
-// Utility function to escape HTML and prevent XSS attacks
+// Approximate conversion rates (fallback when Amadeus test API returns USD/EUR
+// despite the INR currency parameter). In production, fetch a live rate.
+const USD_TO_INR = 83.5;
+const EUR_TO_INR = 90.0;
+const GBP_TO_INR = 105.0;
+
+function toCurrencyINR(price, currency) {
+  if (!price && price !== 0) return null;
+  const p = parseFloat(price);
+  if (isNaN(p)) return null;
+  switch ((currency || '').toUpperCase()) {
+    case 'INR': return p;
+    case 'USD': return p * USD_TO_INR;
+    case 'EUR': return p * EUR_TO_INR;
+    case 'GBP': return p * GBP_TO_INR;
+    default:
+      // If value looks like USD (suspiciously small for INR), convert
+      return p < 500 ? p * USD_TO_INR : p;
+  }
+}
+
+function formatINR(amount) {
+  if (amount == null || isNaN(amount)) return 'N/A';
+  return '₹' + Math.round(amount).toLocaleString('en-IN');
+}
+
 function escapeHtml(text) {
-    if (text === null || text === undefined) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+  if (text === null || text === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(text);
+  return div.innerHTML;
 }
 
-// Debug logging wrapper - only logs in development mode
-function debugLog(...args) {
-    if (DEV_MODE) {
-        console.log(...args);
-    }
+function debugLog(...args) { if (DEV_MODE) console.log(...args); }
+
+// ── CSRF ─────────────────────────────────────────────────────────────────────
+function getCsrfToken() {
+  const el = document.querySelector('input[name="csrf_token"]');
+  return el ? el.value : '';
 }
 
-// Debug error wrapper - only logs in development mode
-function debugError(...args) {
-    if (DEV_MODE) {
-        console.error(...args);
-    }
-}
-
+// ── MAIN ─────────────────────────────────────────────────────────────────────
 let chatListenerAttached = false;
 
-function getCsrfToken() {
-    const el = document.querySelector('input[name="csrf_token"]');
-    return el ? el.value : null;
-}
+document.addEventListener('DOMContentLoaded', function () {
+  const searchForm  = document.getElementById('search-form');
+  const flightsList = document.getElementById('flights-list');
+  const hotelsList  = document.getElementById('hotels-list');
+  const loading     = document.getElementById('loading');
+  const noFlights   = document.getElementById('no-flights');
+  const noHotels    = document.getElementById('no-hotels');
+  const startPt     = document.getElementById('startPoint');
+  const destEl      = document.getElementById('destination');
+  const budgetTip   = document.getElementById('budget-tooltip');
+  const startDate   = document.getElementById('startDate');
+  const endDate     = document.getElementById('endDate');
 
-// Wait for the DOM to be fully loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Get DOM elements
-    const searchForm = document.getElementById('search-form');
-    if (!searchForm) debugError('search-form not found');
-    
-    const flightsList = document.getElementById('flights-list');
-    if (!flightsList) debugError('flights-list not found');
-    
-    const hotelsList = document.getElementById('hotels-list');
-    if (!hotelsList) debugError('hotels-list not found');
-    
-    const loading = document.getElementById('loading');
-    if (!loading) debugError('loading element not found');
-    
-    const noFlights = document.getElementById('no-flights');
-    if (!noFlights) debugError('no-flights element not found');
-    
-    const noHotels = document.getElementById('no-hotels');
-    if (!noHotels) debugError('no-hotels element not found');
-    
-    const startPointSelect = document.getElementById('startPoint');
-    if (!startPointSelect) debugError('startPoint not found');
-    
-    const destinationSelect = document.getElementById('destination');
-    if (!destinationSelect) debugError('destination not found');
-    
-    const budgetTooltip = document.getElementById('budget-tooltip');
-    if (!budgetTooltip) debugError('budget-tooltip not found');
-    
-    debugLog('DOM elements initialized');
-    
-    // Create a div to display minimum prices
-    const minPricesDiv = document.createElement('div');
-    minPricesDiv.className = 'min-price-display';
-    minPricesDiv.style.display = 'none';
-    
-    // Get the budget and date elements to position the min prices div between them
-    const budgetGroup = document.querySelector('.form-group:nth-child(3)');
-    const dateGroup = document.querySelector('.form-group.date-range:first-of-type');
-    
-    // Insert the min prices div after the budget field and before the date fields
-    if (budgetGroup && dateGroup) {
-        searchForm.insertBefore(minPricesDiv, dateGroup);
-    }
-    
-    // Function to populate a select element
-    function populateSelect(select, cities) {
-        // Keep the first option (placeholder)
-        const firstOption = select.options[0];
-        select.innerHTML = '';
-        select.appendChild(firstOption);
+  // Min date = today
+  const today = new Date().toISOString().split('T')[0];
+  if (startDate) startDate.min = today;
+  if (endDate)   endDate.min   = today;
 
-        // Add city options
-        cities.forEach(city => {
-            const option = document.createElement('option');
-            const cityText = `${city.name}, ${city.country}`;
-            option.value = cityText;  // Store just city and country as value
-            option.textContent = cityText;  // Display city and country
-            option.setAttribute('data-city-code', city.city_code);  // Store city code for API calls
-            select.appendChild(option);
-        });
-    }
-
-    function populateBothSelects(cities) {
-        if (!startPointSelect || !destinationSelect) {
-            debugError('Could not find select elements');
-            return;
-        }
-        populateSelect(startPointSelect, cities);
-        populateSelect(destinationSelect, cities);
-    }
-
-    // Function to load city options into dropdowns
-    async function loadCityOptions() {
-        const cached = sessionStorage.getItem('availableCities');
-        if (cached) {
-            try {
-                populateBothSelects(JSON.parse(cached));
-                return;
-            } catch (e) {
-                // ignore cache parse failure and refetch
-            }
-        }
-        try {
-            // Get list of all available cities
-            const csrfToken = getCsrfToken();
-            const reqBody = new FormData();
-            if (csrfToken) reqBody.append('csrf_token', csrfToken);
-            const response = await fetch('/search_cities', {
-                method: 'POST',
-                body: reqBody
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to fetch cities');
-            }
-            
-            const data = await response.json();
-            debugLog('Received cities data:', data);
-            
-            // Get the list of cities from available cities
-            const cities = data.suggestions || data.available_cities || [];
-            debugLog('Cities to populate:', cities);
-            
-            if (cities.length === 0) {
-                debugError('No cities available');
-                return;
-            }
-            
-            // Populate both dropdowns
-            populateBothSelects(cities);
-            sessionStorage.setItem('availableCities', JSON.stringify(cities));
-            
-        } catch (error) {
-            debugError('Error loading cities:', error);
-            // Add error message to dropdowns
-            [startPointSelect, destinationSelect].forEach(select => {
-                select.innerHTML = '<option value="">Error loading cities</option>';
-            });
-        }
-    }
-    
-    // Function to fetch and display minimum prices
-    async function updateMinPrices() {
-        const startPoint = startPointSelect.value;
-        const destination = destinationSelect.value;
-        
-        // Show appropriate message based on selection state
-        if (!startPoint && !destination) {
-            budgetTooltip.textContent = 'Select origin and destination to see minimum hotel cost';
-            return;
-        } else if (!startPoint) {
-            budgetTooltip.textContent = 'Select origin to see minimum hotel cost';
-            return;
-        } else if (!destination) {
-            budgetTooltip.textContent = 'Select destination to see minimum hotel cost';
-            return;
-        }
-        
-        // At this point both origin and destination are selected
-        budgetTooltip.textContent = 'Fetching minimum hotel cost...';
-        
-        // Clear any previous minPricesDiv content
-        minPricesDiv.innerHTML = '';
-        minPricesDiv.style.display = 'none';
-        
-        // Create form data
-        const formData = new FormData();
-        const csrfToken = getCsrfToken();
-        if (csrfToken) formData.append('csrf_token', csrfToken);
-        formData.append('startPoint', startPoint);
-        formData.append('destination', destination);
-        
-        try {
-            // Fetch minimum prices
-            const response = await fetch('/get_min_prices', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) throw new Error('Failed to fetch minimum prices');
-            const data = await response.json();
-            
-            if (data.error) {
-                minPricesDiv.style.display = 'none';
-                budgetTooltip.textContent = 'Could not retrieve minimum hotel cost';
-                return;
-            }
-            
-            // Update tooltip with minimum hotel cost
-            if (data && data.min_hotel_price) {
-                budgetTooltip.textContent = `Minimum Hotel Cost per night: ${data.min_hotel_price}`;
-            } else {
-                budgetTooltip.textContent = 'No hotel price data available for this destination';
-            }
-            
-            // Don't display the minPricesDiv anymore
-            minPricesDiv.style.display = 'none';
-        } catch (error) {
-            debugError('Error fetching minimum prices:', error);
-            minPricesDiv.style.display = 'none';
-            budgetTooltip.textContent = 'Unable to fetch hotel prices. Please try again';
-        }
-    }
-    
-    // Add event listeners to update min prices when selections change
-    startPointSelect.addEventListener('change', () => {
-        setTimeout(updateMinPrices, 100); // Small delay to ensure value is updated
+  // ── populate selects ────────────────────────────────────────────────────────
+  function populateSelect(sel, cities) {
+    if (!sel) return;
+    const first = sel.options[0];
+    sel.innerHTML = '';
+    sel.appendChild(first);
+    cities.forEach(c => {
+      const opt = document.createElement('option');
+      const label = `${c.name}, ${c.country}`;
+      opt.value = label;
+      opt.textContent = label;
+      opt.setAttribute('data-city-code', c.city_code);
+      sel.appendChild(opt);
     });
-    
-    destinationSelect.addEventListener('change', () => {
-        setTimeout(updateMinPrices, 100); // Small delay to ensure value is updated
-    });
-    
-    // Handle form submission
-    searchForm.addEventListener('submit', async function(e) {
-        e.preventDefault(); // This should prevent the page from reloading
-        
-        // Show loading state
-        loading.style.display = 'block';
-        flightsList.innerHTML = '';
-        hotelsList.innerHTML = '';
-        noFlights.style.display = 'none';
-        noHotels.style.display = 'none';
-        
-        // Get form data
-        const formData = new FormData(searchForm);
+  }
 
-        // Get the selected city codes from the dropdowns
-        const startPointOption = startPointSelect.options[startPointSelect.selectedIndex];
-        const destinationOption = destinationSelect.options[destinationSelect.selectedIndex];
-
-        const startPointCode = startPointOption.getAttribute('data-city-code');
-        const destinationCode = destinationOption.getAttribute('data-city-code');
-
-        // Append city codes to the form data for the backend
-        if (startPointCode) formData.set('startPointCode', startPointCode);
-        if (destinationCode) formData.set('destinationCode', destinationCode);
-        
-        // Validate dates
-        const startDate = document.getElementById('startDate').value;
-        const endDate = document.getElementById('endDate').value;
-        
-        if (!startDate || !endDate) {
-            alert('Please select both start and end dates');
-            loading.style.display = 'none';
-            return;
-        }
-        
-        if (new Date(endDate) <= new Date(startDate)) {
-            alert('End date must be after start date');
-            loading.style.display = 'none';
-            return;
-        }
-        // Validate required city codes (ensure user selected valid options)
-        if (!startPointCode || !destinationCode) {
-            alert('Please select valid origin and destination from the lists');
-            loading.style.display = 'none';
-            return;
-        }
-
-        try {
-            // Fetch combined results from /search endpoint
-            const response = await fetch('/search', {
-                method: 'POST',
-                body: formData
-            });
-            
-            const data = await response.json();
-            debugLog('Search response:', data);
-            
-            if (!response.ok || data.error) {
-                debugError('Search error:', data.error);
-                throw new Error(data.error || 'Search failed');
-            }
-            
-            // Process Flights
-            const flights = data.flights || [];
-            debugLog('Processed flight data:', flights);
-            
-            if (flights.length === 0) {
-                noFlights.style.display = 'block';
-            } else {
-                noFlights.style.display = 'none';
-                flights.forEach(flight => {
-                    const flightElement = document.createElement('div');
-                    flightElement.className = 'flight-item';
-
-                    // Format times properly
-                    const formatTime = (isoString) => {
-                        if (!isoString) return 'N/A';
-                        return new Date(isoString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                    };
-
-                    const departureTime = formatTime(flight.departureTime);
-                    const arrivalTime = formatTime(flight.arrivalTime);
-                    const flightNumber = flight.flightNumber || 'N/A';
-
-                    // Format price properly
-                    const formatPrice = (price) => {
-                        if (price === undefined || price === null) return 'N/A';
-                        return `₹${parseFloat(price).toLocaleString('en-IN')}`;
-                    };
-
-                    flightElement.innerHTML = `
-                        <div class="flight-header">
-                            <h3>${escapeHtml(flight.airline) || 'Unknown Airline'}</h3>
-                            <span class="flight-number">${escapeHtml(flightNumber)}</span>
-                        </div>
-                        <div class="flight-route">
-                            <div class="departure">
-                                <span class="time">${escapeHtml(departureTime)}</span>
-                                <span class="airport">${escapeHtml(flight.departureAirport) || 'N/A'}</span>
-                            </div>
-                            <div class="flight-arrow">→</div>
-                            <div class="arrival">
-                                <span class="time">${escapeHtml(arrivalTime)}</span>
-                                <span class="airport">${escapeHtml(flight.arrivalAirport) || 'N/A'}</span>
-                            </div>
-                        </div>
-                        <div class="flight-details">
-                            <div class="price">${formatPrice(flight.price)}</div>
-                        </div>
-                    `;
-                    flightsList.appendChild(flightElement);
-                });
-            }
-            
-            // Process Hotels
-            const hotels = data.hotels || [];
-            debugLog('Processed hotel data:', hotels);
-            
-            if (hotels.length === 0) {
-                noHotels.style.display = 'block';
-            } else {
-                noHotels.style.display = 'none';
-                hotels.forEach(hotel => {
-                    const hotelElement = document.createElement('div');
-                    hotelElement.className = 'hotel-item';
-
-                    // Format price properly
-                    const formatPrice = (price) => {
-                        if (price === undefined || price === null) return 'N/A';
-                        return `₹${parseFloat(price).toLocaleString('en-IN')}`;
-                    };
-
-                    hotelElement.innerHTML = `
-                        <div class="hotel-header">
-                            <h3 class="hotel-name">${escapeHtml(hotel.name) || 'Hotel Name Not Available'}</h3>
-                            <div class="hotel-rating">
-                                ${'★'.repeat(Math.round(hotel.rating || 0))}${'☆'.repeat(5 - Math.round(hotel.rating || 0))}
-                            </div>
-                        </div>
-                        <div class="hotel-details">
-                            <div class="hotel-location">
-                                <span class="icon">📍</span>
-                                <span>${escapeHtml(hotel.location) || 'Location Not Available'}</span>
-                            </div>
-                            <div class="hotel-description">
-                                <p>${escapeHtml(hotel.description) || 'No description available'}</p>
-                            </div>
-                            <div class="hotel-amenities">
-                                ${hotel.amenities ? hotel.amenities.map(amenity => `<span class="amenity-tag">${escapeHtml(amenity)}</span>`).join('') : ''}
-                            </div>
-                            <div class="hotel-price">
-                                <span class="label">Price per night:</span>
-                                <span class="amount">${formatPrice(hotel.price)}</span>
-                            </div>
-                        </div>
-                    `;
-                    hotelsList.appendChild(hotelElement);
-                });
-            }
-            
-        } catch (error) {
-            debugError('Error:', error);
-            flightsList.innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
-            hotelsList.innerHTML = '<p class="error">Error fetching results. Please try again.</p>';
-        } finally {
-            loading.style.display = 'none';
-            
-            // Chat setup moved to DOM load; nothing to do here now
-        }
-    });
-    
-    // Set minimum date for date inputs to today
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('startDate').min = today;
-    document.getElementById('endDate').min = today;
-    
-    // Initialize by loading cities and updating min prices
-    debugLog('Loading city options...');
-    loadCityOptions();
-    updateMinPrices();
-
-    // Initialize chatbot immediately on page load
-    const userMessageInput = document.getElementById('userMessage');
-    const chatForm = document.getElementById('chat-form');
-    if (chatForm && userMessageInput) {
-        if (!chatListenerAttached) {
-            chatListenerAttached = true;
-            chatForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                const message = userMessageInput.value.trim();
-                if (!message) return;
-
-                const chatMessages = document.getElementById('chat-messages');
-                if (!chatMessages) { debugError('chat-messages element not found'); return; }
-                const userMessageElement = document.createElement('div');
-                userMessageElement.className = 'message user';
-                const userP = document.createElement('p');
-                userP.textContent = message; // Use textContent to prevent XSS
-                userMessageElement.appendChild(userP);
-                chatMessages.appendChild(userMessageElement);
-
-                userMessageInput.value = '';
-
-                // Pull current form values if available
-                const destinationEl = document.getElementById('destination');
-                const startPointEl = document.getElementById('startPoint');
-                const startDateEl = document.getElementById('startDate');
-                const endDateEl = document.getElementById('endDate');
-
-                const destination = destinationEl ? destinationEl.value : '';
-                const startPoint = startPointEl ? startPointEl.value : '';
-                const startDate = startDateEl ? startDateEl.value : '';
-                const endDate = endDateEl ? endDateEl.value : '';
-
-                const chatData = new FormData();
-                const csrfToken = chatForm.querySelector('input[name="csrf_token"]')?.value || getCsrfToken();
-                if (csrfToken) chatData.append('csrf_token', csrfToken);
-                chatData.append('message', message);
-                chatData.append('destination', destination);
-                chatData.append('startPoint', startPoint);
-                chatData.append('startDate', startDate);
-                chatData.append('endDate', endDate);
-
-                try {
-                    const loadingElement = document.createElement('div');
-                    loadingElement.className = 'message bot loading';
-                    loadingElement.innerHTML = '<p>Thinking...</p>';
-                    chatMessages.appendChild(loadingElement);
-
-                    const response = await fetch('/chatbot', {
-                        method: 'POST',
-                        body: chatData
-                    });
-
-                    if (!response.ok) throw new Error('Chatbot request failed');
-                    const data = await response.json();
-
-                    chatMessages.removeChild(loadingElement);
-
-                    const botMessageElement = document.createElement('div');
-                    botMessageElement.className = 'message bot';
-                    // Note: backend sends pre-formatted HTML responses
-                    botMessageElement.innerHTML = `<p>${DOMPurify.sanitize(data.response)}</p>`;
-                    chatMessages.appendChild(botMessageElement);
-
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                } catch (error) {
-                    debugError('Chatbot error:', error);
-                    const errorElement = document.createElement('div');
-                    errorElement.className = 'message bot error';
-                    errorElement.innerHTML = '<p>Sorry, I encountered an error. Please try again.</p>';
-                    chatMessages.appendChild(errorElement);
-                }
-            });
-        }
+  async function loadCities() {
+    const cached = sessionStorage.getItem('availableCities');
+    if (cached) {
+      try {
+        const cities = JSON.parse(cached);
+        populateSelect(startPt, cities);
+        populateSelect(destEl, cities);
+        return;
+      } catch (_) {}
     }
+    try {
+      const fd = new FormData();
+      fd.append('csrf_token', getCsrfToken());
+      const res   = await fetch('/search_cities', { method: 'POST', body: fd });
+      const data  = await res.json();
+      const cities = data.available_cities || data.suggestions || [];
+      populateSelect(startPt, cities);
+      populateSelect(destEl, cities);
+      sessionStorage.setItem('availableCities', JSON.stringify(cities));
+    } catch (e) {
+      debugLog('loadCities error', e);
+    }
+  }
+
+  loadCities();
+
+  // ── min hotel price hint ────────────────────────────────────────────────────
+  async function updateMinPrice() {
+    if (!budgetTip) return;
+    const origin = startPt?.value;
+    const dest   = destEl?.value;
+    if (!origin || !dest) {
+      budgetTip.textContent = origin ? 'Select destination to see min hotel cost' : 'Select origin & destination';
+      return;
+    }
+    budgetTip.textContent = 'Fetching min hotel cost…';
+    const fd = new FormData();
+    fd.append('csrf_token', getCsrfToken());
+    fd.append('startPoint', origin);
+    fd.append('destination', dest);
+    try {
+      const res  = await fetch('/get_min_prices', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.min_hotel_price && data.min_hotel_price !== 'N/A') {
+        budgetTip.textContent = `Min hotel/night: ${data.min_hotel_price}`;
+      } else {
+        budgetTip.textContent = 'No price data available';
+      }
+    } catch (_) {
+      budgetTip.textContent = '';
+    }
+  }
+
+  startPt?.addEventListener('change', () => setTimeout(updateMinPrice, 50));
+  destEl?.addEventListener('change',  () => setTimeout(updateMinPrice, 50));
+
+  // ── render helpers ──────────────────────────────────────────────────────────
+  function formatTime(iso) {
+    if (!iso || iso === 'N/A') return '——';
+    try {
+      return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+    } catch (_) {
+      return (iso.length >= 16) ? iso.slice(11, 16) : '——';
+    }
+  }
+
+  function renderFlights(flights) {
+    flightsList.innerHTML = '';
+    if (!flights || flights.length === 0) {
+      if (noFlights) noFlights.style.display = 'block';
+      return;
+    }
+    if (noFlights) noFlights.style.display = 'none';
+
+    flights.forEach(f => {
+      const priceINR = toCurrencyINR(f.price, f.currency);
+      const priceStr = formatINR(priceINR);
+      const dep     = formatTime(f.departureTime);
+      const arr     = formatTime(f.arrivalTime);
+      const airline = escapeHtml(f.airline || 'Unknown Airline');
+      const fnum    = escapeHtml(f.flightNumber || '');
+      const depAP   = escapeHtml(f.departureAirport || '—');
+      const arrAP   = escapeHtml(f.arrivalAirport || '—');
+      const rawDur  = f.duration || '';
+      const dur     = rawDur
+        ? escapeHtml(String(rawDur).replace('PT','').replace('H','h ').replace('M','m').trim())
+        : '';
+
+      const div = document.createElement('div');
+      div.className = 'flight-item';
+      div.innerHTML = `
+        <div class="fi-top">
+          <span class="fi-airline">${airline}</span>
+          ${fnum ? `<span class="fi-num">${fnum}</span>` : ''}
+        </div>
+        <div class="fi-route">
+          <div class="fi-airport">
+            <span class="fi-time">${dep}</span>
+            <span class="fi-code">${depAP}</span>
+          </div>
+          <div class="fi-line">
+            <div class="fi-line-bar"></div>
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.3">
+              <path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/>
+              <circle cx="7" cy="7" r="1.5"/>
+            </svg>
+            <div class="fi-line-bar" style="background:linear-gradient(90deg,rgba(59,100,200,0.1),rgba(59,100,200,0.4))"></div>
+          </div>
+          <div class="fi-airport" style="text-align:right">
+            <span class="fi-time">${arr}</span>
+            <span class="fi-code">${arrAP}</span>
+          </div>
+        </div>
+        <div class="fi-bottom">
+          <span class="fi-price">${priceStr}</span>
+          ${dur ? `<span class="fi-duration">${dur}</span>` : ''}
+        </div>
+      `;
+      flightsList.appendChild(div);
+    });
+  }
+
+  function renderHotels(hotels) {
+    hotelsList.innerHTML = '';
+    if (!hotels || hotels.length === 0) {
+      if (noHotels) noHotels.style.display = 'block';
+      return;
+    }
+    if (noHotels) noHotels.style.display = 'none';
+
+    hotels.forEach(h => {
+      const priceINR  = toCurrencyINR(h.price, h.currency);
+      const priceStr  = formatINR(priceINR);
+      const name      = escapeHtml(h.name || 'Hotel');
+      const loc       = escapeHtml(h.location || '');
+      const desc      = escapeHtml(h.description || '');
+      const rating    = parseFloat(h.rating) || 0;
+      const full      = Math.min(5, Math.round(rating));
+      const stars     = '★'.repeat(full) + '☆'.repeat(5 - full);
+      const amenities = Array.isArray(h.amenities) ? h.amenities : [];
+      const isEst     = h.isEstimate;
+
+      const div = document.createElement('div');
+      div.className = 'hotel-item';
+      div.innerHTML = `
+        <div class="hi-top">
+          <span class="hi-name">${name}${isEst ? ' <span style="font-size:10px;color:rgba(255,180,50,0.5)">(est.)</span>' : ''}</span>
+          <span class="hi-stars">${stars}</span>
+        </div>
+        ${loc ? `<div class="hi-location"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M6 1a3 3 0 010 6C3.3 7 1 4.5 1 4.5S3.3 1 6 1z"/><circle cx="6" cy="4" r="1"/></svg>${loc}</div>` : ''}
+        ${desc ? `<div class="hi-desc">${desc}</div>` : ''}
+        <div class="hi-bottom">
+          <div class="hi-amenities">
+            ${amenities.slice(0,4).map(a => `<span class="amenity-tag">${escapeHtml(String(a))}</span>`).join('')}
+          </div>
+          <div class="hi-price">
+            <span class="hi-price-label">per night</span>
+            <span class="hi-price-amount">${priceStr}</span>
+          </div>
+        </div>
+      `;
+      hotelsList.appendChild(div);
+    });
+  }
+
+  // ── form submit ─────────────────────────────────────────────────────────────
+  searchForm?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const startOpt  = startPt?.options[startPt.selectedIndex];
+    const destOpt   = destEl?.options[destEl.selectedIndex];
+    const startCode = startOpt?.getAttribute('data-city-code') || '';
+    const destCode  = destOpt?.getAttribute('data-city-code') || '';
+    const sd = startDate?.value;
+    const ed = endDate?.value;
+
+    if (!sd) { alert('Please select a departure date'); return; }
+    if (ed && new Date(ed) <= new Date(sd)) { alert('Return date must be after departure date'); return; }
+    if (!startCode || !destCode) { alert('Please select valid origin and destination'); return; }
+
+    if (loading) loading.style.display = 'block';
+    flightsList.innerHTML = '';
+    hotelsList.innerHTML  = '';
+    if (noFlights) noFlights.style.display = 'none';
+    if (noHotels)  noHotels.style.display  = 'none';
+
+    const fd = new FormData(searchForm);
+    fd.set('startPointCode', startCode);
+    fd.set('destinationCode', destCode);
+
+    try {
+      const res  = await fetch('/search', { method: 'POST', body: fd });
+      const data = await res.json();
+      renderFlights(data.flights || []);
+      renderHotels(data.hotels  || []);
+    } catch (err) {
+      debugLog('search error', err);
+      flightsList.innerHTML = '<p style="color:rgba(255,100,100,0.7);font-size:14px;padding:16px 0;">Error fetching results. Please try again.</p>';
+    } finally {
+      if (loading) loading.style.display = 'none';
+    }
+  });
+
+  // ── chatbot ─────────────────────────────────────────────────────────────────
+  const chatForm  = document.getElementById('chat-form');
+  const chatInput = document.getElementById('userMessage');
+  const chatMsgs  = document.getElementById('chat-messages');
+
+  if (chatForm && !chatListenerAttached) {
+    chatListenerAttached = true;
+
+    chatForm.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const msg = chatInput?.value?.trim();
+      if (!msg) return;
+
+      // user bubble
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user';
+      const ububble = document.createElement('div');
+      ububble.className = 'msg-bubble';
+      ububble.textContent = msg;
+      userDiv.appendChild(ububble);
+      chatMsgs.appendChild(userDiv);
+      chatInput.value = '';
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+      // typing indicator
+      const typingDiv = document.createElement('div');
+      typingDiv.className = 'message bot';
+      typingDiv.innerHTML = `
+        <div class="msg-avatar">
+          <svg viewBox="0 0 13 13" fill="none" stroke="rgba(232,199,106,0.7)" stroke-width="1.2">
+            <path d="M6.5 1a4 4 0 110 8 4 4 0 010-8z"/>
+            <path d="M2 12c0-1.7 2-3 4.5-3s4.5 1.3 4.5 3"/>
+          </svg>
+        </div>
+        <div class="msg-bubble" style="opacity:0.6">
+          <span style="display:inline-flex;gap:4px;align-items:center">
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+            <span class="loader-dot"></span>
+          </span>
+        </div>`;
+      chatMsgs.appendChild(typingDiv);
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+
+      const fd = new FormData();
+      fd.append('csrf_token', getCsrfToken());
+      fd.append('message', msg);
+      fd.append('destination', destEl?.value || '');
+      fd.append('startPoint', startPt?.value || '');
+      fd.append('startDate', startDate?.value || '');
+      fd.append('endDate', endDate?.value || '');
+
+      try {
+        const res  = await fetch('/chatbot', { method: 'POST', body: fd });
+        const data = await res.json();
+        chatMsgs.removeChild(typingDiv);
+
+        const botDiv = document.createElement('div');
+        botDiv.className = 'message bot';
+        const botBubble = document.createElement('div');
+        botBubble.className = 'msg-bubble';
+        const html = data.response || 'Sorry, I could not respond right now.';
+        botBubble.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(html) : html;
+        botDiv.innerHTML = `<div class="msg-avatar"><svg viewBox="0 0 13 13" fill="none" stroke="rgba(232,199,106,0.7)" stroke-width="1.2"><path d="M6.5 1a4 4 0 110 8 4 4 0 010-8z"/><path d="M2 12c0-1.7 2-3 4.5-3s4.5 1.3 4.5 3"/></svg></div>`;
+        botDiv.appendChild(botBubble);
+        chatMsgs.appendChild(botDiv);
+      } catch (_) {
+        if (chatMsgs.contains(typingDiv)) chatMsgs.removeChild(typingDiv);
+        const errDiv = document.createElement('div');
+        errDiv.className = 'message bot';
+        errDiv.innerHTML = `<div class="msg-avatar"><svg viewBox="0 0 13 13" fill="none" stroke="rgba(232,199,106,0.7)" stroke-width="1.2"><path d="M6.5 1a4 4 0 110 8 4 4 0 010-8z"/></svg></div><div class="msg-bubble" style="color:rgba(255,100,100,0.8)">Error reaching assistant. Try again.</div>`;
+        chatMsgs.appendChild(errDiv);
+      }
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    });
+  }
 });

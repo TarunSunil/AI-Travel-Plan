@@ -261,7 +261,15 @@ function showError(message) {
 }
 
 function showLoading(loading) {
-    const signupBtn = document.querySelector('.login-btn');
+    const signupBtn =
+        document.querySelector('.submit-btn') ||
+        document.querySelector('.login-btn');
+
+    if (!signupBtn) {
+        console.error('Signup button not found');
+        return;
+    }
+
     if (loading) {
         signupBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Creating account...</span>';
         signupBtn.disabled = true;

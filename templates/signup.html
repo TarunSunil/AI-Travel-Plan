@@ -1,109 +1,297 @@
 {% extends "base.html" %}
 
-{% block title %}Sign Up - AI Travel Planner{% endblock %}
+{% block title %}Create Account — AI Travel Planner{% endblock %}
 
 {% block styles %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  background: #0a0e1a;
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  position: relative; overflow: hidden;
+}
+
+.bg-canvas {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 40%, rgba(16,30,60,0.9) 0%, #0a0e1a 70%),
+    radial-gradient(ellipse 60% 80% at 80% 60%, rgba(10,20,40,0.8) 0%, transparent 70%);
+  z-index: 0;
+}
+
+.glow-orb { position: fixed; border-radius: 50%; filter: blur(80px); z-index: 1; pointer-events: none; }
+.glow-orb-1 { width: 400px; height: 400px; background: rgba(59,100,180,0.12); top: -100px; right: -100px; animation: drift1 14s ease-in-out infinite; }
+.glow-orb-2 { width: 280px; height: 280px; background: rgba(100,60,180,0.09); bottom: -60px; left: -60px; animation: drift2 11s ease-in-out infinite; }
+@keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-50px,50px)} }
+@keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(40px,-40px)} }
+
+.stars { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+.star { position: absolute; width: 2px; height: 2px; background: rgba(255,255,255,0.5); border-radius: 50%; animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s); }
+@keyframes twinkle { 0%,100%{opacity:0.15} 50%{opacity:0.9} }
+
+.page-wrap { position: relative; z-index: 10; width: 100%; max-width: 460px; animation: fadeUp 0.7s cubic-bezier(0.22,1,0.36,1) both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+
+.card {
+  background: rgba(15,22,40,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px; padding: 36px;
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+}
+
+.brand { text-align: center; margin-bottom: 28px; }
+.brand-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, #1a3a8f 0%, #3b64c8 100%);
+  border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+  box-shadow: 0 0 28px rgba(59,100,200,0.3);
+}
+.brand-icon svg { width: 26px; height: 26px; fill: none; stroke: white; stroke-width: 1.5; stroke-linejoin: round; }
+.brand h1 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 400; color: #f0f4ff; margin-bottom: 5px; }
+.brand p  { font-size: 13px; color: rgba(255,255,255,0.35); }
+
+.field-group { margin-bottom: 16px; }
+.field-label { display: block; font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255,255,255,0.35); margin-bottom: 7px; }
+
+.field-wrap { position: relative; display: flex; align-items: center; }
+.field-icon { position: absolute; left: 13px; width: 15px; height: 15px; opacity: 0.3; pointer-events: none; }
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 44px 12px 40px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 11px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; color: #f0f4ff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+input::placeholder { color: rgba(255,255,255,0.18); }
+input:focus { border-color: rgba(59,100,200,0.6); background: rgba(255,255,255,0.07); box-shadow: 0 0 0 3px rgba(59,100,200,0.12); }
+
+.eye-btn {
+  position: absolute; right: 11px;
+  background: none; border: none; cursor: pointer;
+  padding: 6px; color: rgba(255,255,255,0.25);
+  display: flex; align-items: center; transition: color 0.2s;
+}
+.eye-btn:hover { color: rgba(255,255,255,0.65); }
+.eye-btn svg { width: 15px; height: 15px; pointer-events: none; }
+
+.submit-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, #1a3a8f 0%, #3b64c8 100%);
+  border: none; border-radius: 12px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; color: #fff;
+  cursor: pointer; transition: opacity 0.2s, transform 0.15s;
+  margin-top: 8px; margin-bottom: 20px;
+  position: relative; overflow: hidden;
+}
+.submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.submit-btn:active { transform: scale(0.99); }
+
+.error-msg {
+  background: rgba(220,50,50,0.1);
+  border: 1px solid rgba(220,50,50,0.22);
+  border-radius: 10px; padding: 11px 14px;
+  font-size: 13px; color: #ff8080; margin-bottom: 16px; display: none;
+}
+.error-msg.visible { display: block; }
+
+.terms-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+.terms-check { width: 16px; height: 16px; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; margin-top: 2px; flex-shrink: 0; cursor: pointer; accent-color: #3b64c8; }
+.terms-text { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+.terms-text a { color: rgba(100,140,255,0.7); text-decoration: none; }
+
+.divider { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.07); }
+.divider span { font-size: 12px; color: rgba(255,255,255,0.22); white-space: nowrap; }
+
+.social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.social-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; color: rgba(255,255,255,0.55);
+  cursor: pointer; transition: all 0.2s;
+}
+.social-btn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.18); }
+.social-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.footer-link { text-align: center; font-size: 13px; color: rgba(255,255,255,0.28); }
+.footer-link a { color: rgba(100,140,255,0.8); text-decoration: none; }
+.footer-link a:hover { color: #7fa0ff; }
+</style>
 {% endblock %}
 
 {% block body %}
-    <div class="animated-bg">
-        <div class="floating-plane"></div>
-        <div class="clouds"></div>
+<div class="bg-canvas"></div>
+<div class="glow-orb glow-orb-1"></div>
+<div class="glow-orb glow-orb-2"></div>
+<div class="stars" id="stars"></div>
+
+<div class="page-wrap">
+  <div class="card">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24">
+          <path d="M3.5 18.5L5.5 12.5L2 9.5L6 9L8 5L10 9L14 9.5L10.5 12.5L11.5 17L8 15L3.5 18.5Z"/>
+          <path d="M14 8L21 3L18 11L21 13L16 13L14 16L13 12L14 8Z"/>
+        </svg>
+      </div>
+      <h1>Create account</h1>
+      <p>Start your journey today</p>
     </div>
-    
-    <div class="login-container">
-        <div class="login-card">
-            <!-- Logo Section -->
-            <div class="logo-section">
-                <div class="logo-icon">
-                    <i class="fas fa-plane"></i>
-                </div>
-                <h1>Join Travel Planner</h1>
-                <p>Start your journey today</p>
-            </div>
 
-            <!-- Signup Form -->
-            <form id="signupForm">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="form-group">
-                    <div class="input-container">
-                        <input type="text" id="username" name="username" required>
-                        <label for="username">Username</label>
-                        <i class="fas fa-user input-icon"></i>
-                    </div>
-                </div>
+    <div class="error-msg" id="errorMessage"></div>
 
-                <div class="form-group">
-                    <div class="input-container">
-                        <input type="email" id="email" name="email" required>
-                        <label for="email">Email Address</label>
-                        <i class="fas fa-envelope input-icon"></i>
-                    </div>
-                </div>
+    <form id="signupForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                <div class="form-group">
-                    <div class="input-container">
-                        <input type="password" id="password" name="password" required>
-                        <label for="password">Password</label>
-                        <i class="fas fa-lock input-icon"></i>
-                        <button type="button" class="toggle-password" onclick="togglePassword('password')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="input-container">
-                        <input type="password" id="confirmPassword" name="confirmPassword" required>
-                        <label for="confirmPassword">Confirm Password</label>
-                        <i class="fas fa-lock input-icon"></i>
-                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <button type="submit" class="login-btn">
-                    <span>Create Account</span>
-                    <i class="fas fa-arrow-right"></i>
-                </button>
-
-                <div class="error-message" id="errorMessage"></div>
-            </form>
-
-            <!-- Social Login -->
-            <div class="social-login">
-                <button type="button" class="social-btn google-btn" onclick="signInWithGoogle()">
-                    <i class="fab fa-google"></i>
-                    <span>Google</span>
-                </button>
-                <button type="button" class="social-btn github-btn" onclick="signInWithGithub()">
-                    <i class="fab fa-github"></i>
-                    <span>GitHub</span>
-                </button>
-            </div>
-
-            <!-- Terms Agreement -->
-            <div class="terms-agreement">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="agreeTerms" required>
-                    <span class="checkmark"></span>
-                    I agree to the <a href="#" class="terms-link">Terms of Service </a>  and  <a href="#" class="privacy-link"> Privacy Policy </a>
-                </label>
-            </div>
-
-            <!-- Footer -->
-            <div class="login-footer">
-                <p>Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>
-            </div>
+      <div class="field-group">
+        <label class="field-label" for="username">Username</label>
+        <div class="field-wrap">
+          <svg class="field-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+            <circle cx="8" cy="5" r="3"/>
+            <path d="M1.5 14c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/>
+          </svg>
+          <input type="text" id="username" name="username" placeholder="Your name" required>
         </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="email">Email address</label>
+        <div class="field-wrap">
+          <svg class="field-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+            <rect x="1" y="3" width="14" height="10" rx="2"/>
+            <path d="M1 5.5L8 10L15 5.5"/>
+          </svg>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="password">Password</label>
+        <div class="field-wrap">
+          <svg class="field-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+            <rect x="3" y="7" width="10" height="8" rx="2"/>
+            <path d="M5 7V5a3 3 0 016 0v2"/>
+            <circle cx="8" cy="11" r="1" fill="white" stroke="none"/>
+          </svg>
+          <input type="password" id="password" name="password" placeholder="Min. 6 characters" required>
+          <button type="button" class="eye-btn" id="togglePwd1" aria-label="Toggle password">
+            <svg id="eyeIcon1" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+              <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
+              <circle cx="8" cy="8" r="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="confirmPassword">Confirm password</label>
+        <div class="field-wrap">
+          <svg class="field-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+            <path d="M2 8l4 4 8-8"/>
+          </svg>
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat password" required>
+          <button type="button" class="eye-btn" id="togglePwd2" aria-label="Toggle confirm password">
+            <svg id="eyeIcon2" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+              <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
+              <circle cx="8" cy="8" r="2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="terms-row">
+        <input type="checkbox" class="terms-check" id="agreeTerms" required>
+        <p class="terms-text">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+      </div>
+
+      <button type="submit" class="submit-btn">Create account</button>
+    </form>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <span>or continue with</span>
+      <div class="divider-line"></div>
     </div>
 
+    <div class="social-row">
+      <button type="button" class="social-btn" onclick="signInWithGoogle()">
+        <svg viewBox="0 0 16 16" fill="none">
+          <path d="M15.68 8.18c0-.56-.05-1.1-.14-1.62H8v3.07h4.3a3.67 3.67 0 01-1.59 2.41v2h2.57c1.5-1.38 2.37-3.42 2.37-5.86z" fill="#4285F4"/>
+          <path d="M8 16c2.16 0 3.97-.72 5.29-1.94l-2.57-2a4.8 4.8 0 01-7.14-2.52H1v2.07A8 8 0 008 16z" fill="#34A853"/>
+          <path d="M3.58 9.54a4.8 4.8 0 010-3.07V4.4H1A8 8 0 000 8c0 1.29.31 2.51.86 3.6l2.72-2.06z" fill="#FBBC05"/>
+          <path d="M8 3.18a4.34 4.34 0 013.07 1.2L13.4 2.05A7.71 7.71 0 008 0 8 8 0 001 4.4l2.58 2.07A4.77 4.77 0 018 3.18z" fill="#EA4335"/>
+        </svg>
+        Google
+      </button>
+      <button type="button" class="social-btn" onclick="signInWithGithub()">
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        GitHub
+      </button>
+    </div>
+
+    <div class="footer-link">
+      Already have an account? <a href="{{ url_for('login') }}">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Stars
+const starsEl = document.getElementById('stars');
+for (let i = 0; i < 50; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*5}s`;
+  starsEl.appendChild(s);
+}
+
+// ── Eye toggle — direct ID binding ──
+function setupEye(btnId, inputId, iconId) {
+  const btn = document.getElementById(btnId);
+  const inp = document.getElementById(inputId);
+  const ico = document.getElementById(iconId);
+  if (!btn || !inp || !ico) return;
+  btn.addEventListener('click', function() {
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    ico.innerHTML = show
+      ? '<path d="M2 2L14 14M6.3 6.5a2 2 0 002.9 2.7M1 8s2.5-5 7-5a6.7 6.7 0 013.5 1M14.8 10.3A7.7 7.7 0 0115 8s-2.5-5-7-5" stroke="currentColor" stroke-width="1.3" fill="none"/>'
+      : '<path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="2" fill="none" stroke="currentColor" stroke-width="1.3"/>';
+  });
+}
+setupEye('togglePwd1', 'password', 'eyeIcon1');
+setupEye('togglePwd2', 'confirmPassword', 'eyeIcon2');
+
+const errorEl = document.getElementById('errorMessage');
+function showError(msg) {
+  errorEl.textContent = msg;
+  errorEl.classList.add('visible');
+  setTimeout(() => errorEl.classList.remove('visible'), 5000);
+}
+</script>
 {% endblock %}
 
 {% block scripts %}
-  <script type="module" src="{{ url_for('static', filename='js/signup.js') }}"></script>
+<script type="module" src="{{ url_for('static', filename='js/signup.js') }}"></script>
 {% endblock %}
