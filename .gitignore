@@ -18,6 +18,7 @@ sample.env
 *.sqlite
 *.sqlite3
 travel_planner.db
+cache.db
 
 # Node (if present)
 node_modules/

@@ -5,10 +5,17 @@ Pytest fixtures and configuration for Travel Planner tests.
 import pytest
 import sys
 import os
+import tempfile
 from datetime import datetime
 
 # Add parent directory to path so we can import modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Ensure required env vars exist before importing the Flask app module.
+os.environ.setdefault("SECRET_KEY", "test-secret-key-for-testing-only")
+os.environ.setdefault("GEMINI_API_KEY", "test-gemini-api-key")
+# Isolate cache.db used by travel_api for tests.
+os.environ.setdefault("CACHE_DIR", tempfile.mkdtemp(prefix="travel_planner_test_cache_"))
 
 from main import app as flask_app
 

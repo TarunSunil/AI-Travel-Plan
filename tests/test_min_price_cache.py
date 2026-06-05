@@ -1,31 +1,39 @@
 import unittest
-from datetime import datetime
+import os
+import tempfile
 
-from main import (
-    get_min_price_for_destination,
-    MIN_PRICE_CACHE,
-    MIN_PRICE_CACHE_LOCK,
-)
+# Ensure travel_api uses an isolated cache.db for this test module.
+os.environ.setdefault("CACHE_DIR", tempfile.mkdtemp(prefix="travel_planner_test_cache_"))
+
+import travel_api
 
 
 class TestMinPriceCaching(unittest.TestCase):
     def setUp(self):
-        with MIN_PRICE_CACHE_LOCK:
-            MIN_PRICE_CACHE.clear()
+        # Clear sqlite cache between tests
+        try:
+            os.remove(os.path.join(os.environ["CACHE_DIR"], "cache.db"))
+        except Exception:
+            pass
 
     def test_min_price_is_cached(self):
         call_count = {"count": 0}
 
-        def fake_fetch(city_name, check_in, check_out, adults):
+        def fake_search_hotels(city_name, check_in, check_out, adults=1):
             call_count["count"] += 1
-            return [
-                {"price": 1500},
-                {"price": 2200},
-            ]
+            return ([
+                {"price": 1500, "currency": "INR"},
+                {"price": 2200, "currency": "INR"},
+            ], "ai_synthesized")
 
-        first = get_min_price_for_destination("Paris", fetcher=fake_fetch, days=2)
-        initial_calls = call_count["count"]
-        second = get_min_price_for_destination("Paris", fetcher=fake_fetch, days=2)
+        orig = travel_api.search_hotels
+        travel_api.search_hotels = fake_search_hotels
+        try:
+            first = travel_api.get_min_hotel_price("Paris")
+            initial_calls = call_count["count"]
+            second = travel_api.get_min_hotel_price("Paris")
+        finally:
+            travel_api.search_hotels = orig
 
         self.assertEqual(first, 1500)
         self.assertEqual(second, 1500)
@@ -33,10 +41,15 @@ class TestMinPriceCaching(unittest.TestCase):
         self.assertEqual(call_count["count"], initial_calls)
 
     def test_min_price_handles_no_results(self):
-        def empty_fetch(city_name, check_in, check_out, adults):
-            return []
+        def empty_search_hotels(city_name, check_in, check_out, adults=1):
+            return ([], "ai_synthesized")
 
-        price = get_min_price_for_destination("Nowhere", fetcher=empty_fetch, days=1)
+        orig = travel_api.search_hotels
+        travel_api.search_hotels = empty_search_hotels
+        try:
+            price = travel_api.get_min_hotel_price("Nowhere")
+        finally:
+            travel_api.search_hotels = orig
         self.assertIsNone(price)
 
 

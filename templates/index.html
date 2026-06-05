@@ -126,7 +126,7 @@ body {
 
 .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 .form-full { grid-column: span 2; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 
 .field { display: flex; flex-direction: column; gap: 7px; }
 .field-label { font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
@@ -226,6 +226,27 @@ select:focus, input:focus {
 .fi-bottom { display: flex; justify-content: space-between; align-items: center; }
 .fi-price { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; color: var(--gold-muted); }
 .fi-duration { font-size: 12px; color: var(--text-muted); }
+
+/* Source badges */
+.src-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 7px;
+  border-radius: 10px; letter-spacing: 0.3px;
+}
+.src-live   { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); }
+.src-ai     { background: rgba(167,139,250,0.15); color: #a78bfa; border: 1px solid rgba(167,139,250,0.3); }
+.src-cached { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+.src-est    { background: rgba(156,163,175,0.15); color: #9ca3af; border: 1px solid rgba(156,163,175,0.3); }
+
+/* Stops badge on flight cards */
+.fi-stops {
+  font-size: 10px; padding: 2px 6px; border-radius: 4px;
+  background: rgba(255,255,255,0.06); color: var(--text-muted);
+}
+.fi-nonstop { background: rgba(74,222,128,0.1); color: #4ade80; }
+
+/* Over-budget hotel card */
+.hotel-item.over-budget { border-color: rgba(251,191,36,0.3); }
+.budget-warn { color: #fbbf24; font-size: 12px; }
 
 /* ── HOTEL CARD ── */
 .hotel-item {
@@ -481,6 +502,37 @@ onAuthStateChanged(auth, (user) => {
               <path d="M2 7h12M5 1v3M11 1v3M6 10l2 2 2-2"/>
             </svg>
             <input type="date" id="endDate" name="endDate">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">Passengers</label>
+          <div class="field-inner">
+            <svg class="field-inner-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+              <circle cx="8" cy="5" r="2.5"/>
+              <path d="M3 15c0-3 2.2-5 5-5s5 2 5 5"/>
+            </svg>
+            <select id="adults" name="adults">
+              <option value="1">1 Adult</option>
+              <option value="2">2 Adults</option>
+              <option value="3">3 Adults</option>
+              <option value="4">4 Adults</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Cabin class</label>
+          <div class="field-inner">
+            <svg class="field-inner-icon" viewBox="0 0 16 16" fill="none" stroke="white" stroke-width="1.2">
+              <path d="M3 3h7a3 3 0 013 3v7H7a4 4 0 01-4-4V3z"/>
+              <path d="M7 13V6a2 2 0 012-2h4"/>
+            </svg>
+            <select id="travelClass" name="travelClass">
+              <option value="ECONOMY">Economy</option>
+              <option value="PREMIUM_ECONOMY">Premium Economy</option>
+              <option value="BUSINESS">Business</option>
+              <option value="FIRST">First</option>
+            </select>
           </div>
         </div>
       </div>

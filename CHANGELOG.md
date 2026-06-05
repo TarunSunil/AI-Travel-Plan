@@ -2,6 +2,37 @@
 
 All notable changes to the Travel Planner project are documented here.
 
+## [3.0.0] - 2026-06-05
+
+### 🔄 Travel Data Layer
+- **Replaced**: Amadeus API with free-tier multi-source data layer
+- **Added**: AviationStack (500 req/month) for real flight schedules
+- **Added**: OpenSky Network (no key, truly free) as secondary flight source
+- **Added**: OpenTripMap (5000 req/day) for real hotel/POI discovery
+- **Added**: Gemini AI synthesis as intelligent fallback for both flights and hotels
+- **Added**: Static hardcoded fallback as last resort
+
+### 💾 Caching
+- **Added**: Persistent SQLite cache (`cache.db`) surviving app restarts
+- **Added**: TTL-based cache (flights: 6h, hotels: 12h, min-prices: 6h)
+- **Added**: Stale-on-error: serves last valid cache when all APIs are down
+- **Added**: Source tagging per cached entry (live/ai_synthesized/cached/static_fallback)
+
+### ✨ New Features
+- **Added**: `/api/health` endpoint with API key status and cache statistics
+- **Added**: Data source badges on flight/hotel cards (Live / AI / Cached / Est.)
+- **Added**: Travel class selector (Economy, Premium Economy, Business, First)
+- **Added**: Passengers count selector (1–4 adults)
+- **Added**: Budget filter with over-budget warning on hotel cards
+- **Added**: Non-stop vs stops indicator on flight cards
+- **Added**: Auto-advance return date when departure date is selected
+- **Added**: Same-origin/destination validation in frontend
+
+### 🗑️ Removed
+- **Removed**: `amadeus_api.py` dependency
+- **Removed**: `/flight_status` route (unused in UI)
+- **Removed**: In-memory `MIN_PRICE_CACHE` threading logic (replaced by `cache.db`)
+
 ## [2.0.0] - 2026-01-30
 
 ### 🔒 Security
